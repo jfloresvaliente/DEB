@@ -1,3 +1,6 @@
 # DEB
-DEB test.
-Cambio de nombre Ichthyop-DEB a DEB
+Rutinas para experimentos DEB en ambas especies.
+E. ringens vs E. encrasicolus
+
+Codigo original
+Ichthyop_deb_2statevar_LP.m
