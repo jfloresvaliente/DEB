@@ -21,7 +21,7 @@ f_res = 0 : 0.2 : 1; % Functional response to test
 %% PARAMETER VALUES
 
 % Primary parameters
-T_ref = 16 + T_K;      % K, Reference temperature (not to be changed) [Pethybridge et al 2013]
+T_ref = 20 + T_K;      % K, Reference temperature (not to be changed) [Pethybridge et al 2013]
 T_A   = 10000;          % K, Arrhenius temperature [Pethybridge et al 2013]
 
 % % In case you want to use the complex temperature correction equation...
@@ -43,22 +43,24 @@ T_A   = 10000;          % K, Arrhenius temperature [Pethybridge et al 2013]
 
 % kap_X = 0.71;    % -, digestion efficiency of food to reserve
 % p_Xm  = 325;     % J.cm-2.d-1 , Surface-area-specific maximum ingestion rate [Pethybridge et al 2013] Cambia con el tipo de alimento
-p_Am    = 53;      % J.cm-2.d-1 , Surface-area-specific maximum assimilation rate. In DEBstd = kap_X * p_Xm = 230.75
+p_Am    = 84.97;   % J.cm-2.d-1 , Surface-area-specific maximum assimilation rate. In DEBstd = kap_X * p_Xm = 230.75
 % E_m   = 2700;    % J.cm^(-3), maximum reserve density
-V_dot   = 0.02572; % (cm d-1); Energy conductance
+V_dot   = 0.04124; % (cm d-1); Energy conductance
 E_G     = 5283;    % J/cm^3, spec cost for structure [Pethybridge et al 2013] lo que hay que pagar para generar 1 cm3 de estructura
-p_M     = 50.34;   % J/d.cm^3' , vol-spec somatic maintenance rate [Pethybridge et al 2013]
+p_M     = 80.71;   % J/d.cm^3' , vol-spec somatic maintenance rate [Pethybridge et al 2013]
 kap     = 0.5512;  % - , allocation fraction to soma [Pethybridge et al 2013] Para mantenimiento y crecimiento
 kap_R   = 0.95;    % - , reproduction efficiency [Pethybridge et al 2013]
 % L_wb  = 0.25;    % cm, total length at mouth opening --> ?? total or fork length? [add my pet]
 % L_wp  = 9.077;   % cm, total length at puberty --> ?? guess [add my pet]
-L_b     = 0.0445;  % cm; Volumetric length at birth
-L_j     = 0.2612;  % cm, Volumetric length at metamorphosis
+% L_b     = 0.0445;  % cm; Volumetric length at birth
+% L_j     = 0.2612;  % cm, Volumetric length at metamorphosis
+L_b     = 0.1038;  % cm; Volumetric length at birth (calculo JORGE)
+L_j     = 0.6093;  % cm, Volumetric length at metamorphosis (calculo JORGE)
 % E_Hb    = 0.3889;  % J, Maturity threshold at birth % ouverture de la bouche
-E_Hb    = 0.08;  % J, Maturity threshold at birth % ouverture de la bouche % test a mano
+E_Hb    = 0.335;  % J, Maturity threshold at birth % ouverture de la bouche % A 18 ºC se busca una edad de 5d
 E_Hj    = 83.22;   % J, Maturity threshold at metamorphosis
 E_Hp    = 42160;   % J, Maturity threshold at puberty
-k_J     = 0.0012;  % d-1, Maturity maintenance rate coefficient
+k_J     = 0.002;   % d-1, Maturity maintenance rate coefficient
 
 % Auxiliary parameters
 % del_M_t = 0.154; % - , shape coefficient (Total Length)[Pethybridge et al 2013]
@@ -68,8 +70,8 @@ del_M   = 0.1889;% -
 %del_length = 0; % 1 = Total Length | 0 = Standard Length
 %if del_length == 1
 %    del_M = del_M_t;
-    mkdir('DEB_E0out');
-    subdir = 'DEB_E0out';
+    mkdir('C:/Users/jflores/Desktop/DEB_E0outV3');
+    subdir = 'C:/Users/jflores/Desktop/DEB_E0outV3';
 %else
 %    del_M = del_M_s;
 %    mkdir('DEB_out_s');
@@ -82,7 +84,7 @@ del_M   = 0.1889;% -
 
 %% INITIAL CONDITIONS FOR THE STATE VARIABLES = EGG STAGE
 % E_0  = 1;         % J, egg content
-E_in = 0.2 : 0.2 : 3;
+E_in = [0.2 0.4 0.6 0.8 1.0 1.2 1.4 1.6];
 V_0  = 0.0000001; % revisar valor (0.0025 * del_M_t)^3; % cm, structural volume --> !! try different values
 E_H0 = 0;         % J, development
 E_R0 = 0;         % J, reproduction buffer
@@ -145,7 +147,8 @@ for m = 1:size(E_in, 2)
 		if E_H(i) < E_Hb
 			s_M = 1;
 		elseif (E_Hb <= E_H(i) && (E_H(i) < E_Hj))
-			s_M = V(i)^(1/3)/L_b;
+% 			s_M = V(i)^(1/3)/L_b;
+            s_M = ((V(i)^(1/3))/del_M)/L_b; % Falta division del_M?
 		else
 			s_M = L_j / L_b;
 		end
@@ -182,7 +185,7 @@ for m = 1:size(E_in, 2)
         else
 		
             dE = p_A_flux - p_C_flux ; % J/d, 
-            dV = p_G_flux / E_G;       % cm^3/d,
+            dV = ((kap * p_C_flux) - p_M_flux) / E_G;       % cm^3/d,
 			
             if E_H(i) < E_Hp % antes DEBstd : V(i) < V_p
 				dE_H = (1 - kap) * p_C_flux - p_J_flux; % J, Cumulated energy invested into development

@@ -60,12 +60,12 @@ del_M_s = 0.166; % - , Este valor produce una talla de 1.51 cm menos que la tall
 del_length = 0; % 1 = Total Length | 0 = Standard Length
 if del_length == 1
     del_M = del_M_t;
-    mkdir('DEB_E0out');
-    subdir = 'DEB_E0out';
+    mkdir('DEB_E0outV3');
+    subdir = 'DEB_E0outV3';
 else
     del_M = del_M_s;
-    mkdir('DEB_E0out');
-    subdir = 'DEB_E0out';
+    mkdir('DEB_E0outV3');
+    subdir = 'DEB_E0outV3';
 end
 
 % Compound parameters
@@ -74,7 +74,7 @@ V_p = (L_wp * del_M)^3; % cm^3, structural volume at puberty
 
 %% INITIAL CONDITIONS FOR THE STATE VARIABLES = EGG STAGE
 % E_0  = 1;                  % J, egg content
-E_in = 0.2 : 0.2 : 3;
+E_in = [0.2 0.4 0.6 0.8 1.0 1.2 1.4 1.6];
 V_0  = (0.0025 * del_M)^3; % cm, structural volume --> !! try different values
 E_R0 = 0;                  % J, reproduction buffer
 
