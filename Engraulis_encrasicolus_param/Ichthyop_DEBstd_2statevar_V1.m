@@ -61,8 +61,7 @@ V_b = (L_wb * del_M_t)^3; % cm^3, structural volume at birth (first feeding)
 V_p = (L_wp * del_M_t)^3; % cm^3, structural volume at puberty
 
 %% INITIAL CONDITIONS FOR THE STATE VARIABLES = EGG STAGE
-% E_0  = 1;                    % J, egg content
-E_0  = 0.1;                    % J, egg content
+E_0  = 1;                    % J, egg content
 V_0  = (0.0025 * del_M_t)^3; % cm, structural volume --> !! try different values
 E_R0 = 0;                    % J, reproduction buffer
 
@@ -157,7 +156,7 @@ end
 %% OBSERVABLE VARIABLES
 
 % Physical length
-L_w = (V.^(1/3))./del_M_t; % cm, Physical length
+Lw = (V.^(1/3))./del_M_t; % cm, Physical length
 
 % Wet weight
 d_V  = 0.23;   % g/cm^3, specific density of structure (dry weight)
@@ -199,7 +198,7 @@ ylabel('E_R (J)', 'Fontsize', 15)
 figure(2)
 
 subplot(221)
-plot(t, L_w) % time in days VS Length in cm
+plot(t, Lw) % time in days VS Length in cm
 xlabel('time (d)', 'Fontsize', 15)
 ylabel('Length (cm)', 'Fontsize', 15)
 
@@ -210,7 +209,7 @@ xlabel('time (d)', 'Fontsize', 15)
 ylabel('Wet Weight (g)', 'Fontsize', 15)
 
 subplot(223)
-plot(L_w,Ww)
+plot(Lw,Ww)
 xlabel('Length (cm)', 'Fontsize', 15)
 ylabel('Wet Weight (g)', 'Fontsize', 15)
 
@@ -241,8 +240,8 @@ ylabel('Relative Fecundidad (#eggs/batch)', 'Fontsize', 15)
 % Length at transitions 
 i_b = find(V >= V_b,1); 
 fprintf('age at birth = %d\n', t(i_b) - t(1)) % d, age at birth
-fprintf('length at birth = %d\n',L_w(i_b))    %cm, length at birth
+fprintf('length at birth = %d\n',Lw(i_b))    %cm, length at birth
 
 i_p = find(V >= V_p,1); 
 fprintf('age at puberty = %d\n', t(i_p) - t(1)) % d, age at puberty 
-fprintf('length at puberty = %d\n',L_w(i_p))    %cm, length at puberty
+fprintf('length at puberty = %d\n',Lw(i_p))    %cm, length at puberty

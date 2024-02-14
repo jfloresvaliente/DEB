@@ -13,7 +13,7 @@ n_iter = ceil((t_end - t_0 + 1) / dt);  % number of integration loop iterations
 T_K    = 273.15;                        % Kelvin degrees
 
 %% FORCING VARIABLES
-temp  = 10 : 1 : 30;   % Temperaturas en Cº para testear
+temp  = [15,16,18,19];   % Temperaturas en Cº para testear
 f_res = 0.1 : 0.1 : 1; % Functional response to test
 % We assume abundant food / ad libitum for now
 
@@ -51,26 +51,31 @@ kap     = 0.5512;  % - , allocation fraction to soma [Pethybridge et al 2013] Pa
 kap_R   = 0.95;    % - , reproduction efficiency [Pethybridge et al 2013]
 % L_wb  = 0.25;    % cm, total length at mouth opening --> ?? total or fork length? [add my pet]
 % L_wp  = 9.077;   % cm, total length at puberty --> ?? guess [add my pet]
-% L_b     = 0.0445;  % cm; Volumetric length at birth
-% L_j     = 0.2612;  % cm, Volumetric length at metamorphosis
-L_b     = 0.1038;  % cm; Volumetric length at birth (calculo JORGE)
-L_j     = 0.6093;  % cm, Volumetric length at metamorphosis (calculo JORGE)
+L_b     = 0.0445;  % cm; Volumetric length at birth
+L_j     = 0.2612;  % cm, Volumetric length at metamorphosis
+% L_b     = 0.1038;  % cm; Volumetric length at birth (calculo JORGE)
+% L_j     = 0.6093;  % cm, Volumetric length at metamorphosis (calculo JORGE)
+E_Hb    = 0.335;  % J, Maturity threshold at birth % ouverture de la bouche % A 18.5 ºC, hatch = 5d
 % E_Hb    = 0.3889;  % J, Maturity threshold at birth % ouverture de la bouche
-E_Hb    = 0.335;   % J, Maturity threshold at birth % ouverture de la bouche % A 18 ºC se busca una edad de 5d
 E_Hj    = 83.22;   % J, Maturity threshold at metamorphosis
 E_Hp    = 42160;   % J, Maturity threshold at puberty
+E_Hy    = E_Hp;   % J, Maturity at the end of the early juvenile stage
 k_J     = 0.002;   % d-1, Maturity maintenance rate coefficient
+del_M1  = 0.08095; % -, shape coefficient for standard length of larvae
+del_M2  = 0.1889;  % -, shape coefficient for standard length
+E_H2    = (E_Hb + E_Hj)/2; % Half-saturation maturity, i.e. the level of maturity at which the shape factor is an arithmetic mean of del_M1 and del_M2  
 
 % Auxiliary parameters
 % del_M_t = 0.154; % - , shape coefficient (Total Length)[Pethybridge et al 2013]
 % del_M_s = 0.166; % - , This value produces a standard length of 1.51 cm less than the total length, which is observed in ichthyometer figures.
-del_M   = 0.1889;% -
+% del_M   = 0.1889;% -
 
 %del_length = 0; % 1 = Total Length | 0 = Standard Length
 %if del_length == 1
 %    del_M = del_M_t;
-    mkdir('C:/Users/jflores/Desktop/DEB_out');
-    subdir = 'C:/Users/jflores/Desktop/DEB_out';
+    subdir = 'C:/Users/jflores/Documents/JORGE/TESIS/TESIS_PHD/DEB/ichthyop_DEB/Engraulis_ringens_param/DEBout';
+    mkdir(subdir);
+    
 %else
 %    del_M = del_M_s;
 %    mkdir('DEB_out_s');
@@ -94,6 +99,8 @@ V      = zeros(n_iter,1);
 E_H    = zeros(n_iter,1);
 E_R    = zeros(n_iter,1);
 F      = zeros(n_iter,1);
+acc    = zeros(n_iter,1);
+del    = zeros(n_iter,1);
 
 t(1)   = t_0;    % d,    Time vector initialization 
 E(1)   = E_0;    % J,    Initial reserve
@@ -132,16 +139,41 @@ for j = 1:size(temp,2)
         % Scaled functional response
         % f = X(i) / (X(i) + K); % -, scaled functional response
         % f = 0.9999; % We assume food to satiation
-		%% Metabolic acceleration – abj model
-		if E_H(i) < E_Hb
-			s_M = 1;
-		elseif (E_Hb <= E_H(i) && (E_H(i) < E_Hj))
-% 			s_M = (V(i)^(1/3))/L_b;
-            s_M = ((V(i)^(1/3))/del_M)/L_b; % Falta division del_M?
-		else
-			s_M = L_j / L_b;
-		end
+
+    %% Metabolic acceleration – abj model + del_M
+    if E_H(i) < E_Hb
+        del_M = 0.08095; % shape coefficient for standard length of larvae
+        	s_M = 1;
+    elseif (E_Hb <= E_H(i) && E_H(i) < E_Hj)
+        del_M = 0.08095; % shape coefficient for standard length of larvae
+        s_M = (V(i)^(1/3))/L_b;
+    else
+        del_M = 0.1889; % shape coefficient for standard length
+		s_M = L_j / L_b;
+    end
+    
+%         %% Metabolic acceleration – abj model
+%         if E_H(i) < E_Hb
+%             s_M = 1;
+%         elseif (E_Hb <= E_H(i) && E_H(i) < E_Hj)
+%             s_M = (V(i)^(1/3))/L_b;
+%         else
+%             s_M = L_j / L_b;
+%         end
+    
+%         %% Shape factor – abj model (Jusup et al 2011)
+%         if E_H(i) < E_Hb
+%             del_M = del_M1; % shape coefficient for standard length of larvae
+% %             del_M = ( del_M1*(E_H2 - E_Hb) + del_M2*(E_H(i)- E_Hb) ) / (E_H(i) + E_H2 - 2*E_Hb); % shape coefficient Jusup et al 2011
+%         elseif (E_Hb <= E_H(i) && E_H(i) < E_Hy)
+%             del_M = ( del_M1*(E_H2 - E_Hb) + del_M2*(E_H(i)- E_Hb) ) / (E_H(i) + E_H2 - 2*E_Hb); % shape coefficient Jusup et al 2011
+%         else
+%             del_M = del_M2; % shape coefficient for standard length
+%         end
 		
+        acc(i) = s_M;
+        del(i) = del_M;
+        
 		% Only two parameters are accelerated by s_M, p_Am and v
 		p_AmT  = s_M * p_AmT;
 		V_dotT = s_M * V_dotT;
@@ -156,7 +188,7 @@ for j = 1:size(temp,2)
         p_M_flux = p_MT * V(i); % J/d , Volume-related somatic maintenance
 		p_C_flux = (E(i) / V(i)) * (E_G * V_dotT * V(i)^(2/3) + p_M_flux) ./ (kap * E(i) ./ V(i) + E_G); % Energy for utilisation
 		% p_C_flux = E(i) .* ( E_G * p_AmT / E_m .* V(i)^(-1/3) + p_MT) ./ ( kap .* E(i) ./ V(i) + E_G); % antes DEBstd
-		p_G_flux = max(0, kap * p_C_flux - p_M_flux);% J/d growth
+% 		p_G_flux = max(0, kap * p_C_flux - p_M_flux);% J/d growth
 		% p_G_flux = kap * p_C_flux - p_M_flux;% antes DEBstd
 		p_J_flux = k_JT * E_H(i)  ; % J/d, Maturity maintenance !!
 		% p_J_flux = (1- kap) / kap * p_MT * min(V(i), V_p)  ; % antes DEBstd
@@ -215,30 +247,30 @@ for j = 1:size(temp,2)
         
         end
         
-        %% OBSERVABLE VARIABLES
-    
-        % Physical length
-        L_w = (V.^(1/3))./del_M ; % cm, Physical length
-
-        % Wet weight
-        d_V  = 0.23;   % g/cm^3, specific density of structure (dry weight)
-        mu_V = 500000; % J/mol, specific chemical potential of structure
-        mu_E = 550000; % J/mol, specific chemical potential of reserve
-        w_V  = 23.9;   % g/mol, molecular weight of structure
-        w_E  = 23.9;   % g/mol, molecular weight of reserve
-        c_w  = 0.756;  % (c_w * W_w = total water weight)
-
-        W_V        = d_V.*V;
-        W_E        = (w_E/mu_E).*E;
-        W_ER       = (w_E/mu_E).*E_R;
-		Dry_weight = [W_V W_E W_ER];        % g, Dry weight
-		Wet_weight = Dry_weight./(1 - c_w); % g, Wet weight
-        
-        Ww = sum(Wet_weight,2);
+%         %% OBSERVABLE VARIABLES
+%     
+%         % Physical length
+%         L_w = (V.^(1/3))./del ; % cm, Physical length
+% 
+%         % Wet weight
+%         d_V  = 0.23;   % g/cm^3, specific density of structure (dry weight)
+%         mu_V = 500000; % J/mol, specific chemical potential of structure
+%         mu_E = 550000; % J/mol, specific chemical potential of reserve
+%         w_V  = 23.9;   % g/mol, molecular weight of structure
+%         w_E  = 23.9;   % g/mol, molecular weight of reserve
+%         c_w  = 0.756;  % (c_w * W_w = total water weight)
+% 
+%         W_V        = d_V.*V;
+%         W_E        = (w_E/mu_E).*E;
+%         W_ER       = (w_E/mu_E).*E_R;
+% 		Dry_weight = [W_V W_E W_ER];        % g, Dry weight
+% 		Wet_weight = Dry_weight./(1 - c_w); % g, Wet weight
+%         
+%         Ww = sum(Wet_weight,2);
 		
-        out_mat = table(t,E,V,E_H,E_R,Ww,L_w,F,t_vec,f_vec,...
+        out_mat = table(t,E,V,E_H,E_R,F,acc,del,t_vec,f_vec,...
                         'VariableNames',...
-                        {'t','E','V','E_H','E_R','Ww','L_w','F','temp','f'});
+                        {'t','E','V','E_H','E_R','F','acc','delta','temp','f'});
         writetable(out_mat, strcat(subdir, '/DEB_out','T',num2str(temp(j)),'f',num2str(f_res(k)),'.txt'))
     end
 end

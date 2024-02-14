@@ -60,12 +60,12 @@ del_M_s = 0.166; % - , Este valor produce una talla de 1.51 cm menos que la tall
 del_length = 0; % 1 = Total Length | 0 = Standard Length
 if del_length == 1
     del_M = del_M_t;
-    mkdir('DEB_E0outV3');
-    subdir = 'DEB_E0outV3';
+    subdir = 'C:/Users/jflores/Documents/JORGE/TESIS/TESIS_PHD/DEB/ichthyop_DEB/Engraulis_encrasicolus_param/DEBout_tV3_t/';
+    mkdir(subdir);
 else
     del_M = del_M_s;
-    mkdir('DEB_E0outV3');
-    subdir = 'DEB_E0outV3';
+    subdir = 'C:/Users/jflores/Documents/JORGE/TESIS/TESIS_PHD/DEB/ichthyop_DEB/Engraulis_encrasicolus_param/DEBout_tV3_s/';
+    mkdir(subdir);
 end
 
 % Compound parameters
@@ -195,7 +195,7 @@ for m = 1:size(E_in, 2)
         %% OBSERVABLE VARIABLES
     
         % Physical length
-        L_w = (V.^(1/3))./del_M ; % cm, Physical length
+        Lw = (V.^(1/3))./del_M ; % cm, Physical length
 
         % Wet weight
         d_V  = 0.23;   % g/cm^3, specific density of structure (dry weight)
@@ -213,9 +213,9 @@ for m = 1:size(E_in, 2)
         
         Ww = sum(Wet_weight,2);
 		
-        out_mat = table(t,E,V,E_R,Ww,L_w,F,t_vec,f_vec,E_vec,p_M_flux_vec,p_C_flux_vec,p_G_flux_vec,p_J_flux_vec,...
+        out_mat = table(t,E,V,E_R,Ww,Lw,F,t_vec,f_vec,E_vec,p_M_flux_vec,p_C_flux_vec,p_G_flux_vec,p_J_flux_vec,...
                         'VariableNames',...
-                        {'t','E','V','E_R','Ww','L_w','F','temp','f','E0','p_M_flux','p_C_flux','p_G_flux','p_J_flux'});
+                        {'t','E','V','E_R','Ww','Lw','F','temp','f','E0','p_M_flux','p_C_flux','p_G_flux','p_J_flux'});
         writetable(out_mat, strcat(subdir, '/DEB_out','T',num2str(temp(j)),'f',num2str(f_res(k)),'E0_',num2str(E_in(m)),'.txt'))
     end
     end

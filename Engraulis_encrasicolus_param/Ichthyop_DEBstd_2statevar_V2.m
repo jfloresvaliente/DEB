@@ -13,7 +13,7 @@ n_iter = ceil((t_end - t_0 + 1) / dt);  % number of integration loop iterations
 T_K    = 273.15;                        % Kelvin degrees
 
 %% FORCING VARIABLES
-temp  = 10 : 1 : 30;   % Temperaturas en Cº para testear
+temp  = [15 16 18 19];   % Temperaturas en Cº para testear
 f_res = 0.1 : 0.1 : 1; % Functional response to test
 % We assume abundant food / ad libitum for now
 
@@ -59,12 +59,12 @@ del_M_s = 0.166; % - , Este valor produce una talla de 1.51 cm menos que la tall
 del_length = 0; % 1 = Total Length | 0 = Standard Length
 if del_length == 1
     del_M = del_M_t;
-    mkdir('DEB_out_t');
-    subdir = 'DEB_out_t';
+    subdir = 'C:/Users/jflores/Documents/JORGE/TESIS/TESIS_PHD/DEB/ichthyop_DEB/Engraulis_encrasicolus_param/DEBout_t/';
+    mkdir(subdir);
 else
     del_M = del_M_s;
-    mkdir('DEB_out_s');
-    subdir = 'DEB_out_s';
+    subdir = 'C:/Users/jflores/Documents/JORGE/TESIS/TESIS_PHD/DEB/ichthyop_DEB/Engraulis_encrasicolus_param/DEBout_s/';
+    mkdir(subdir);
 end
 
 % Compound parameters
@@ -177,7 +177,7 @@ for j = 1:size(temp,2)
         %% OBSERVABLE VARIABLES
     
         % Physical length
-        L_w = (V.^(1/3))./del_M ; % cm, Physical length
+        Lw = (V.^(1/3))./del_M ; % cm, Physical length
 
         % Wet weight
         d_V  = 0.23;   % g/cm^3, specific density of structure (dry weight)
@@ -195,9 +195,9 @@ for j = 1:size(temp,2)
         
         Ww = sum(Wet_weight,2);
 		
-        out_mat = table(t,E,V,E_R,Ww,L_w,F,t_vec,f_vec,...
+        out_mat = table(t,E,V,E_R,Ww,Lw,F,t_vec,f_vec,...
                         'VariableNames',...
-                        {'t','E','V','E_R','Ww','L_w','F','temp','f'});
+                        {'t','E','V','E_R','Ww','Lw','F','temp','f'});
         writetable(out_mat, strcat(subdir, '/DEB_out','T',num2str(temp(j)),'f',num2str(f_res(k)),'.txt'))
     end
 end

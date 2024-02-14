@@ -60,14 +60,12 @@ del_M_s = 0.166; % - , Este valor produce una talla de 1.51 cm menos que la tall
 del_length = 0; % 1 = Total Length | 0 = Standard Length
 if del_length == 1
     del_M = del_M_t;
-    dirname = strcat('DEB_outV4', 'L_w',num2str(talla));
+    dirname = strcat('C:/Users/jflores/Documents/JORGE/TESIS/TESIS_PHD/DEB/ichthyop_DEB/Engraulis_encrasicolus_param/DEBout_tV4_t/', 'Lw', num2str(talla));
     mkdir(dirname);
-    subdir = dirname;
 else
     del_M = del_M_s;
-    dirname = strcat('DEB_outV4', 'L_w',num2str(talla));
+    dirname = strcat('C:/Users/jflores/Documents/JORGE/TESIS/TESIS_PHD/DEB/ichthyop_DEB/Engraulis_encrasicolus_param/DEBout_tV4_s/', 'Lw', num2str(talla));
     mkdir(dirname);
-    subdir = dirname;
 end
 
 % Compound parameters
@@ -85,14 +83,14 @@ E      = zeros(n_iter,1);
 V      = zeros(n_iter,1);
 E_R    = zeros(n_iter,1);
 F      = zeros(n_iter,1);
-L_w    = zeros(n_iter,1);
+Lw    = zeros(n_iter,1);
 f_vari = zeros(n_iter,1);
 
 t(1)   = t_0;    % d,    Time vector initialization 
 E(1)   = E_0;    % J,    Initial reserve
 V(1)   = V_0;    % cm^3, Initial structure
 E_R(1) = E_R0;   % J,    Reproduction buffer   ------ I put an indice to try to run the script
-L_w(1) = (V(1)^(1/3))/del_M; % Talla inicial
+Lw(1) = (V(1)^(1/3))/del_M; % Talla inicial
 
 for j = 1:size(temp,2)
     
@@ -104,7 +102,7 @@ for j = 1:size(temp,2)
         
             % Condicional para que luego de una talla determinada, f cambia
             % a una condicion diferente de 1
-            if L_w(i) <= talla % Talla de la larva en cm antes de iniciar una condicion de 'f' diferente a 1
+            if Lw(i) <= talla % Talla de la larva en cm antes de iniciar una condicion de 'f' diferente a 1
                 f = 1;
             else
                 f = f_res(k);
@@ -166,7 +164,7 @@ for j = 1:size(temp,2)
         E_R(i+1) = E_R(i) + dE_R * dt ; % J/d, Energy invested to reproduction
         
 		% Physical length
-        L_w(i+1) = (V(i+1)^(1/3))/del_M ; % cm, Physical length
+        Lw(i+1) = (V(i+1)^(1/3))/del_M ; % cm, Physical length
 
 % 		% Spawning rule 1: Every 30 days
 % 		if (i/360 - round(i/360) == 0)
@@ -195,7 +193,7 @@ for j = 1:size(temp,2)
         %% OBSERVABLE VARIABLES
     
 %         % Physical length
-%         L_w = (V.^(1/3))./del_M ; % cm, Physical length
+%         Lw = (V.^(1/3))./del_M ; % cm, Physical length
 
         % Wet weight
         d_V  = 0.23;   % g/cm^3, specific density of structure (dry weight)
@@ -213,9 +211,9 @@ for j = 1:size(temp,2)
         
         Ww = sum(Wet_weight,2);
 		
-        out_mat = table(t,E,V,E_R,Ww,L_w,F,t_vec,f_vec,f_vari,...
+        out_mat = table(t,E,V,E_R,Ww,Lw,F,t_vec,f_vec,f_vari,...
                         'VariableNames',...
-                        {'t','E','V','E_R','Ww','L_w','F','temp','f','f_vari'});
+                        {'t','E','V','E_R','Ww','Lw','F','temp','f','f_vari'});
         writetable(out_mat, strcat(subdir, '/DEB_out','T',num2str(temp(j)),'f',num2str(f_res(k)),'.txt'))
     end
 end
