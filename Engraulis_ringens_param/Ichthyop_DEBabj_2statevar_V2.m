@@ -13,8 +13,8 @@ n_iter = ceil((t_end - t_0 + 1) / dt);  % number of integration loop iterations
 T_K    = 273.15;                        % Kelvin degrees
 
 %% FORCING VARIABLES
-temp  = [15,16,18,19];   % Temperaturas en Cº para testear
-f_res = 0.1 : 0.1 : 1; % Functional response to test
+temp  = 10:30;   % Temperaturas en Cº para testear
+f_res = 1; %0.1 : 0.1 : 1; % Functional response to test
 % We assume abundant food / ad libitum for now
 
 %% PARAMETER VALUES

@@ -60,11 +60,11 @@ del_M_s = 0.166; % - , Este valor produce una talla de 1.51 cm menos que la tall
 del_length = 0; % 1 = Total Length | 0 = Standard Length
 if del_length == 1
     del_M = del_M_t;
-    dirname = strcat('C:/Users/jflores/Documents/JORGE/TESIS/TESIS_PHD/DEB/ichthyop_DEB/Engraulis_encrasicolus_param/DEBout_tV4_t/', 'Lw', num2str(talla));
+    dirname = strcat('C:/Users/jflores/Documents/JORGE/TESIS/TESIS_PHD/DEB/ichthyop_DEB/Engraulis_encrasicolus_param/DEBout_tV4/', 'Lw', num2str(talla));
     mkdir(dirname);
 else
     del_M = del_M_s;
-    dirname = strcat('C:/Users/jflores/Documents/JORGE/TESIS/TESIS_PHD/DEB/ichthyop_DEB/Engraulis_encrasicolus_param/DEBout_tV4_s/', 'Lw', num2str(talla));
+    dirname = strcat('C:/Users/jflores/Documents/JORGE/TESIS/TESIS_PHD/DEB/ichthyop_DEB/Engraulis_encrasicolus_param/DEBout_tV4/', 'Lw', num2str(talla));
     mkdir(dirname);
 end
 
@@ -214,6 +214,6 @@ for j = 1:size(temp,2)
         out_mat = table(t,E,V,E_R,Ww,Lw,F,t_vec,f_vec,f_vari,...
                         'VariableNames',...
                         {'t','E','V','E_R','Ww','Lw','F','temp','f','f_vari'});
-        writetable(out_mat, strcat(subdir, '/DEB_out','T',num2str(temp(j)),'f',num2str(f_res(k)),'.txt'))
+        writetable(out_mat, strcat(dirname, '/DEB_out','T',num2str(temp(j)),'f',num2str(f_res(k)),'.txt'))
     end
 end
