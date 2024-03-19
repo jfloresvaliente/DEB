@@ -13,10 +13,10 @@ n_iter = ceil((t_end - t_0 + 1) / dt);  % number of integration loop iterations
 T_K    = 273.15;                        % Kelvin degrees
 
 %% FORCING VARIABLES
-temp  = 10 : 2 : 30;   % Temperaturas en Cº para testear
-f_res = 0 : 0.1 : 1; % Functional response to test
+temp  = 10:30;   % Temperaturas en Cº para testear
+f_res = 0; % Functional response to test
 % We assume abundant food / ad libitum for now
-talla = 3; % Talla de la larva en cm antes de iniciar una condicion de 'f' diferente a 1
+talla = 0.5; % Talla de la larva en cm antes de iniciar una condicion de 'f' diferente a 1
 
 %% PARAMETER VALUES
 
@@ -53,24 +53,17 @@ kap_R = 0.95;         % - , reproduction efficiency [Pethybridge et al 2013]
 L_wb  = 0.25;         % cm, total length at mouth opening --> ?? total or fork length? [add my pet]
 L_wp  = 9.077;        % cm, total length at puberty --> ?? guess [add my pet]
 
-% Auxiliary parameters
-del_M_t = 0.154; % - , shape coefficient (Total Length)[Pethybridge et al 2013]
-del_M_s = 0.166; % - , Este valor produce una talla de 1.51 cm menos que la talla total, que es lo observado en figuras de ictiometro
+%% Auxiliary parameters
+del_M = 0.154; % - , shape coefficient (Total Length)[Pethybridge et al 2013]
+% del_M = 0.166; % - , Este valor produce una talla de 1.51 cm menos que la talla total, que es lo observado en figuras de ictiometro
 
-del_length = 0; % 1 = Total Length | 0 = Standard Length
-if del_length == 1
-    del_M = del_M_t;
-    dirname = strcat('C:/Users/jflores/Documents/JORGE/TESIS/TESIS_PHD/DEB/ichthyop_DEB/Engraulis_encrasicolus_param/DEBout_tV4/', 'Lw', num2str(talla));
-    mkdir(dirname);
-else
-    del_M = del_M_s;
-    dirname = strcat('C:/Users/jflores/Documents/JORGE/TESIS/TESIS_PHD/DEB/ichthyop_DEB/Engraulis_encrasicolus_param/DEBout_tV4/', 'Lw', num2str(talla));
-    mkdir(dirname);
-end
-
-% Compound parameters
+%% Compound parameters
 V_b = (L_wb * del_M)^3; % cm^3, structural volume at birth (first feeding)
 V_p = (L_wp * del_M)^3; % cm^3, structural volume at puberty
+
+%% Create a directory to store the results
+subdir = strcat('C:/Users/jflores/Documents/JORGE/TESIS/TESIS_PHD/DEB/ichthyop_DEB/Engraulis_encrasicolus_param/DEBoutV4/','Lw',num2str(talla));
+mkdir(subdir);
 
 %% INITIAL CONDITIONS FOR THE STATE VARIABLES = EGG STAGE
 E_0  = 1;                  % J, egg content
@@ -83,6 +76,7 @@ E      = zeros(n_iter,1);
 V      = zeros(n_iter,1);
 E_R    = zeros(n_iter,1);
 F      = zeros(n_iter,1);
+del    = zeros(n_iter,1);
 Lw    = zeros(n_iter,1);
 f_vari = zeros(n_iter,1);
 
@@ -109,7 +103,7 @@ for j = 1:size(temp,2)
             end
             f_vari(i) = f;
 
-%     % Temperature correction
+%     %% Temperature correction
 %     % In case you want to use the complex temperature correction equation...
 %     s_A = exp(T_A/ T_ref - T_A ./ T(i));  % Arrhenius factor
 %     s_L_ratio = (1 + exp(T_AL/ T_ref - T_AL/ T_L)) ./ ...
@@ -118,20 +112,22 @@ for j = 1:size(temp,2)
 % 	           (1 + exp(T_AH/ T_H - T_AH ./ T(i)  ));
 %     c_T = s_A .* ((T(i) <= T_ref) .* s_L_ratio + (T(i) > T_ref) .* s_H_ratio); 
 
-		% Temperature correction
+		%% Temperature correction
 		% In case you want to use the simple temperature correction equation...
         c_T   = exp(T_A/ T_ref - T_A ./ T(i));  % simple Arrhenius correction factor
 		
-		% Correction of physiology parameters for temperature :
+		%% Correction of physiology parameters for temperature :
         p_AmT = c_T * p_Am;
-%         vT    = c_T * v;
         p_MT  = c_T * p_M;
  
-        % Scaled functional response
+        %% Scaled functional response
         % f = X(i) / (X(i) + K); % -, scaled functional response
         % f = 0.9999;
 
-        % Fluxes , j/d
+        %% Shape factor – std model
+        del(i) = del_M;
+
+        %% Fluxes , j/d
         if V(i) < V_b 
             p_A_flux = 0;
         else
@@ -163,20 +159,20 @@ for j = 1:size(temp,2)
         V(i+1)   = V(i) + dV * dt ;     % cm^3, Volume of the structure
         E_R(i+1) = E_R(i) + dE_R * dt ; % J/d, Energy invested to reproduction
         
-		% Physical length
+		%% Physical length
         Lw(i+1) = (V(i+1)^(1/3))/del_M ; % cm, Physical length
 
-% 		% Spawning rule 1: Every 30 days
+% 		%% Spawning rule 1: Every 30 days
 % 		if (i/360 - round(i/360) == 0)
 % 			E_R(i+1) = 0; % E_R regresa a cero
 % 		end
 %                
-% 		% Spawning rule 2: One spawning peak in September
+% 		%% Spawning rule 2: One spawning peak in September
 % 		if (i == 3240 || i == 7560 || i == 11880 || i == 16200) % iterator indices for the September months
 % 			E_R(i+1) = E_R(i) * 0.10; % El E_R es el 10% de la cantidad anterior
 % 		end
 
-		% Spawning rule 3: Two spawning peaks in September & March
+		%% Spawning rule 3: Two spawning peaks in September & March
 		if (i+1 == 3240 || i+1 == 7560 || i+1 == 11880 || i+1 == 16200 || ... % iterator indices for the September months (el desove se hace entre i y i+1)
 			i+1 == 1080 || i+1 == 5400 || i+1 == 9720  || i+1 == 14040)       % iterator indices for the March months
 			F(i+1)   = E_R(i+1) * kap_R / E_0;
@@ -189,31 +185,10 @@ for j = 1:size(temp,2)
         f_vec = repmat(f_res(k), n_iter,1); % f, Functional response
         
         end
-        
-        %% OBSERVABLE VARIABLES
-    
-%         % Physical length
-%         Lw = (V.^(1/3))./del_M ; % cm, Physical length
-
-        % Wet weight
-        d_V  = 0.23;   % g/cm^3, specific density of structure (dry weight)
-        mu_V = 500000; % J/mol, specific chemical potential of structure
-        mu_E = 550000; % J/mol, specific chemical potential of reserve
-        w_V  = 23.9;   % g/mol, molecular weight of structure
-        w_E  = 23.9;   % g/mol, molecular weight of reserve
-        c_w  = 0.756;  % (c_w * W_w = total water weight)
-
-        W_V        = d_V.*V;
-        W_E        = (w_E/mu_E).*E;
-        W_ER       = (w_E/mu_E).*E_R;
-		Dry_weight = [W_V W_E W_ER];        % g, Dry weight
-		Wet_weight = Dry_weight./(1 - c_w); % g, Wet weight
-        
-        Ww = sum(Wet_weight,2);
 		
-        out_mat = table(t,E,V,E_R,Ww,Lw,F,t_vec,f_vec,f_vari,...
+        out_mat = table(t,E,V,E_R,Lw,F,t_vec,f_vec,f_vari,del,...
                         'VariableNames',...
-                        {'t','E','V','E_R','Ww','Lw','F','temp','f','f_vari'});
-        writetable(out_mat, strcat(dirname, '/DEB_out','T',num2str(temp(j)),'f',num2str(f_res(k)),'.txt'))
+                        {'t','E','V','E_R','Lw','Fec','temp','f','f_vari','delta'});
+        writetable(out_mat, strcat(subdir, '/DEB_out','T',num2str(temp(j)),'f',num2str(f_res(k)),'.txt'))
     end
 end
