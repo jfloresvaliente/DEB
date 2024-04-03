@@ -13,7 +13,7 @@ n_iter = ceil((t_end - t_0 + 1) / dt);  % number of integration loop iterations
 T_K    = 273.15;                        % Kelvin degrees
 
 %% FORCING VARIABLES
-temp  = 10:30;          % Temperaturas en Cº para testear
+temp  = 16;          % Temperaturas en Cº para testear
 f_res = 0.1 : 0.1 : 1;  % Functional response to test
 % We assume abundant food / ad libitum for now
 
@@ -61,7 +61,7 @@ E_Hy    = E_Hp;   % J, Maturity at the end of the early juvenile stage
 E_H2    = (E_Hb + E_Hj)/2; % Half-saturation maturity, i.e. the level of maturity at which the shape factor is an arithmetic mean of del_M1 and del_M2  
 
 %% Create a directory to store the results
-subdir = 'C:/Users/jflores/Documents/JORGE/TESIS/TESIS_PHD/DEB/ichthyop_DEB/Engraulis_ringens_param/DEBoutV2';
+subdir = 'C:/Users/jflores/Documents/JORGE/TESIS/TESIS_PHD/DEB/ichthyop_DEB/Engraulis_ringens_param/DEBoutV2Jusup';
 mkdir(subdir);
 
 %% INITIAL CONDITIONS FOR THE STATE VARIABLES = EGG STAGE
@@ -127,23 +127,23 @@ for j = 1:size(temp,2)
             s_M = L_j / L_b;
         end
     
-        %% Shape factor – abj model
-        if E_H(i) < E_Hb
-            del_M = del_M1; % shape coefficient for standard length of larvae
-        elseif (E_Hb <= E_H(i) && E_H(i) < E_Hj)
-            del_M = del_M1; % shape coefficient for standard length of larvae
-        else
-            del_M = del_M2; % shape coefficient for standard length
-        end
+%         %% Shape factor – abj model
+%         if E_H(i) < E_Hb
+%             del_M = del_M1; % shape coefficient for standard length of larvae
+%         elseif (E_Hb <= E_H(i) && E_H(i) < E_Hj)
+%             del_M = del_M1; % shape coefficient for standard length of larvae
+%         else
+%             del_M = del_M2; % shape coefficient for standard length
+%         end
 
-%     %% Shape factor – abj model (Jusup et al 2011)
-%     if E_H(i) < E_Hb
-%        del_M = del_M1; % shape coefficient for standard length of larvae
-%     elseif (E_Hb <= E_H(i) && E_H(i) < E_Hy)
-%        del_M = ( del_M1*(E_H2 - E_Hb) + del_M2*(E_H(i)- E_Hb) ) / (E_H(i) + E_H2 - 2*E_Hb);
-%     else
-%        del_M = del_M2; % shape coefficient for standard length
-%     end
+    %% Shape factor – abj model (Jusup et al 2011)
+    if E_H(i) < E_Hb
+       del_M = del_M1; % shape coefficient for standard length of larvae
+    elseif (E_Hb <= E_H(i) && E_H(i) < E_Hy)
+       del_M = ( del_M1*(E_H2 - E_Hb) + del_M2*(E_H(i)- E_Hb) ) / (E_H(i) + E_H2 - 2*E_Hb);
+    else
+       del_M = del_M2; % shape coefficient for standard length
+    end
 		
         acc(i) = s_M;
         del(i) = del_M;
