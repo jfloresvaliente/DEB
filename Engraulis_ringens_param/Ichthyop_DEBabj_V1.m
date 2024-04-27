@@ -61,7 +61,7 @@ del_M2  = 0.1889;  % -, shape coefficient for standard length
 % E_H2    = (E_Hb + E_Hj)/2; % Half-saturation maturity, i.e. the level of maturity at which the shape factor is an arithmetic mean of del_M1 and del_M2
 
 %% Create a directory to store the results
-subdir = 'C:/Users/jflores/Documents/JORGE/TESIS/TESIS_PHD/DEB/ichthyop_DEB/Engraulis_ringens_param/DEBoutV1';
+subdir = 'C:/Users/jflores/Documents/JORGE/TESIS/TESIS_PHD/DEB/ichthyop_DEB/Engraulis_ringens_param/DEBoutV1/';
 mkdir(subdir);
 
 %% INITIAL CONDITIONS FOR THE STATE VARIABLES = EGG STAGE

@@ -23,12 +23,12 @@ f_res = 0.1 : 0.1 : 1; % Functional response to test
 T_ref = 16 + T_K;      % K, Reference temperature (not to be changed) [Pethybridge et al 2013]
 T_A   = 9800;          % K, Arrhenius temperature [Pethybridge et al 2013]
 
-% % In case you want to use the complex temperature correction equation...
-% % Temperature correction - case 1
-% T_L  = 6 + T_K;       % K, Lower boundary of the thermal range
-% T_H  = 21 + T_K;      % K, Upper boundary of the thermal range
-% T_AL = 20000;         % K, Arrhenius temperature at the lower boundary
-% T_AH = 95000;         % K, Arrhenius temperature at the upper boundary
+% In case you want to use the complex temperature correction equation...
+% Temperature correction - case 1
+T_L  = 6 + T_K;       % K, Lower boundary of the thermal range
+T_H  = 21 + T_K;      % K, Upper boundary of the thermal range
+T_AL = 20000;         % K, Arrhenius temperature at the lower boundary
+T_AH = 95000;         % K, Arrhenius temperature at the upper boundary
 % 
 % % Temperature correction - case 2
 % T_L  = 6 + T_K;       % K, Lower boundary of the thermal range
@@ -91,18 +91,18 @@ for j = 1:size(temp,2)
         
         for i = 1:n_iter-1
 
-%     %% Temperature correction
-%     % In case you want to use the complex temperature correction equation...
-%     s_A = exp(T_A/ T_ref - T_A ./ T(i));  % Arrhenius factor
-%     s_L_ratio = (1 + exp(T_AL/ T_ref - T_AL/ T_L)) ./ ...
-% 	           (1 + exp(T_AL ./ T(i)   - T_AL/ T_L));
-%     s_H_ratio = (1 + exp(T_AH/ T_H - T_AH/ T_ref)) ./ ...
-% 	           (1 + exp(T_AH/ T_H - T_AH ./ T(i)  ));
-%     c_T = s_A .* ((T(i) <= T_ref) .* s_L_ratio + (T(i) > T_ref) .* s_H_ratio); 
+    %% Temperature correction
+    % In case you want to use the complex temperature correction equation...
+    s_A = exp(T_A/ T_ref - T_A ./ T(i));  % Arrhenius factor
+    s_L_ratio = (1 + exp(T_AL/ T_ref - T_AL/ T_L)) ./ ...
+	           (1 + exp(T_AL ./ T(i)   - T_AL/ T_L));
+    s_H_ratio = (1 + exp(T_AH/ T_H - T_AH/ T_ref)) ./ ...
+	           (1 + exp(T_AH/ T_H - T_AH ./ T(i)  ));
+    c_T = s_A .* ((T(i) <= T_ref) .* s_L_ratio + (T(i) > T_ref) .* s_H_ratio); 
 
-		%% Temperature correction
-		% In case you want to use the simple temperature correction equation...
-        c_T   = exp(T_A/ T_ref - T_A ./ T(i));  % simple Arrhenius correction factor
+% 		%% Temperature correction
+% 		% In case you want to use the simple temperature correction equation...
+%         c_T   = exp(T_A/ T_ref - T_A ./ T(i));  % simple Arrhenius correction factor
 		
 		%% Correction of physiology parameters for temperature :
         p_AmT = c_T * p_Am;

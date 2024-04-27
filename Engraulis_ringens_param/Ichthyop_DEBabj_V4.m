@@ -3,7 +3,10 @@
 % Numerical integration : Euler
 % Author                : Laure Pecquerie
 % Modified              : J. Flores
-% 2024/03/17
+% 2024/04/27
+% Aim : To perform starvation tests based on initial conditions
+%     such as the physical length and reserve (E) of the individual over a
+%     defined temperature range.
 
 %% INITIALIZATION - TIME STEP, SIMULATION DURATION, VECTOR LENGTH
 dt     = 0.0833;                        % d, time step of the model = 2h ==> dt = 2/24h
@@ -13,16 +16,21 @@ n_iter = ceil((t_end - t_0 + 1) / dt);  % number of integration loop iterations
 T_K    = 273.15;                        % Kelvin degrees
 
 %% FORCING VARIABLES
-temp  = 10:30;   % Temperaturas en Cº para testear
-f_res = 0; % Functional response to test
-% We assume abundant food / ad libitum for now
-talla = 3; % Talla de la larva en cm antes de iniciar una condicion de 'f' diferente a 1
+temp  = 10:30; % Test Temperature Range (ºC)
+
+%% INDIVIDUAL INITIAL CONDITIONS
+
+% talla   = 0.5; % Please provide the initial physical length (cm) of the individual.
+% reserve = 0.348822917; % Please provide the initial energy reserve (J) of the individual.
+
+talla   = 3; % Please provide the initial physical length (cm) of the individual.
+reserve = 29.58281518; % Please provide the initial energy reserve (J) of the individual.
 
 %% PARAMETER VALUES
 
 % Primary parameters
 T_ref = 20 + T_K;      % K, Reference temperature (not to be changed) [Pethybridge et al 2013]
-T_A   = 10000;          % K, Arrhenius temperature [Pethybridge et al 2013]
+T_A   = 10000;         % K, Arrhenius temperature [Pethybridge et al 2013]
 
 % % In case you want to use the complex temperature correction equation...
 % % Temperature correction - case 1
@@ -30,12 +38,12 @@ T_A   = 10000;          % K, Arrhenius temperature [Pethybridge et al 2013]
 % T_H  = 21 + T_K;      % K, Upper boundary of the thermal range
 % T_AL = 20000;         % K, Arrhenius temperature at the lower boundary
 % T_AH = 95000;         % K, Arrhenius temperature at the upper boundary
-% 
-% % Temperature correction - case 2
-% T_L  = 6 + T_K;       % K, Lower boundary of the thermal range
-% T_H  = 24 + T_K;      % K, Upper boundary of the thermal range
-% T_AL = 20000;         % K, Arrhenius temperature at the lower boundary
-% T_AH = 570000;        % K, Arrhenius temperature at the upper boundary
+
+% Temperature correction - case 2
+T_L  = 6 + T_K;       % K, Lower boundary of the thermal range
+T_H  = 24 + T_K;      % K, Upper boundary of the thermal range
+T_AL = 20000;         % K, Arrhenius temperature at the lower boundary
+T_AH = 570000;        % K, Arrhenius temperature at the upper boundary
 
 % if T_L > T_ref || T_H < T_ref
 %      fprintf('Warning from temp_corr: invalid parameter combination, T_L > T_ref and/or T_H < T_ref\n')
@@ -66,8 +74,8 @@ subdir = strcat('C:/Users/jflores/Documents/JORGE/TESIS/TESIS_PHD/DEB/ichthyop_D
 mkdir(subdir);
 
 %% INITIAL CONDITIONS FOR THE STATE VARIABLES = EGG STAGE
-E_0  = 1;         % J, egg content
-V_0  = 0.0000001; % revisar valor (0.0025 * del_M_t)^3; % cm, structural volume --> !! try different values
+E_0  = reserve;         % J, egg content
+V_0  = (talla * del_M1)^3; % revisar valor (0.0025 * del_M_t)^3; % cm, structural volume --> !! try different values
 E_H0 = 0;         % J, development
 E_R0 = 0;         % J, reproduction buffer
 
@@ -81,7 +89,7 @@ F      = zeros(n_iter,1);
 acc    = zeros(n_iter,1);
 del    = zeros(n_iter,1);
 Lw     = zeros(n_iter,1);
-f_vari = zeros(n_iter,1);
+t_cor  = zeros(n_iter,1);
 
 t(1)   = t_0;    % d,    Time vector initialization 
 E(1)   = E_0;    % J,    Initial reserve
@@ -92,32 +100,21 @@ Lw(1) = (V(1)^(1/3))/del_M1; % Talla inicial
 
 for j = 1:size(temp,2)
     
-    for k = 1:size(f_res,2)
-        
         T = repmat(temp(j) + T_K, n_iter,1); % K, Temperature
                
-        for i = 1:n_iter-1
-            % Condicional para que luego de una talla determinada, f cambia
-            % a una condicion diferente de 1
-            if Lw(i) <= talla % Talla de la larva en cm antes de iniciar una condicion de 'f' diferente a 1
-                f = 1;
-            else
-                f = f_res(k);
-            end
-            f_vari(i) = f;
-            
-%     %% Temperature correction
-%     % In case you want to use the complex temperature correction equation...
-%     s_A = exp(T_A/ T_ref - T_A ./ T(i));  % Arrhenius factor
-%     s_L_ratio = (1 + exp(T_AL/ T_ref - T_AL/ T_L)) ./ ...
-% 	           (1 + exp(T_AL ./ T(i)   - T_AL/ T_L));
-%     s_H_ratio = (1 + exp(T_AH/ T_H - T_AH/ T_ref)) ./ ...
-% 	           (1 + exp(T_AH/ T_H - T_AH ./ T(i)  ));
-%     c_T = s_A .* ((T(i) <= T_ref) .* s_L_ratio + (T(i) > T_ref) .* s_H_ratio); 
+        for i = 1:n_iter-1           
+    %% Temperature correction
+    % In case you want to use the complex temperature correction equation...
+    s_A = exp(T_A/ T_ref - T_A / T(i));  % Arrhenius factor
+    s_L_ratio = (1 + exp(T_AL/ T_ref - T_AL/ T_L)) / ...
+	           (1 + exp(T_AL / T(i)   - T_AL/ T_L));
+    s_H_ratio = (1 + exp(T_AH/ T_H - T_AH/ T_ref)) / ...
+	           (1 + exp(T_AH/ T_H - T_AH / T(i)  ));
+    c_T = s_A * ((T(i) <= T_ref) * s_L_ratio + (T(i) > T_ref) * s_H_ratio); 
 
-		%% Temperature correction
-		% In case you want to use the simple temperature correction equation...
-        c_T   = exp(T_A/ T_ref - T_A ./ T(i));  % simple Arrhenius correction factor
+% 		%% Temperature correction
+% 		% In case you want to use the simple temperature correction equation...
+%         c_T   = exp(T_A/ T_ref - T_A / T(i));  % simple Arrhenius correction factor
         
 		%% Correction of physiology parameters for temperature :
 		p_AmT  = c_T * p_Am;
@@ -127,7 +124,7 @@ for j = 1:size(temp,2)
  
         %% Scaled functional response
         % f = X(i) / (X(i) + K); % -, scaled functional response
-        % f = 0.9999; % We assume food to satiation
+        f = 0; % We assume food to satiation
 
         %% Metabolic acceleration – abj model
         if E_H(i) < E_Hb
@@ -219,13 +216,13 @@ for j = 1:size(temp,2)
         t(i+1)   = t(i) + dt ;
         
         t_vec = repmat(temp(j), n_iter,1);  % C, Temperature
-        f_vec = repmat(f_res(k), n_iter,1); % f, Functional response
+        f_vec = repmat(f, n_iter,1); % f, Functional response
         
         end
 
-        out_mat = table(t,E,V,E_H,E_R,Lw,F,t_vec,f_vec,f_vari,del,...
+        out_mat = table(t,E,V,E_H,E_R,Lw,F,t_vec,f_vec,del,t_cor,...
                         'VariableNames',...
-                        {'t','E','V','E_H','E_R','Lw','Fec','temp','f','f_vari','delta'});
-        writetable(out_mat, strcat(subdir, '/DEB_out','T',num2str(temp(j)),'f',num2str(f_res(k)),'.txt'))
-    end
+                        {'t','E','V','E_H','E_R','Lw','Fec','temp','f','delta','t_cor'});
+        writetable(out_mat, strcat(subdir, '/DEB_out','T',num2str(temp(j)),'f','.txt'))
+
 end

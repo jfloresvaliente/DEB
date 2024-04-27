@@ -23,12 +23,12 @@ T = repmat(20 + T_K, n_iter,1); % K, Temperature
 T_ref = 16 + T_K;      % K, Reference temperature (not to be changed) [Pethybridge et al 2013]
 T_A   = 9800;          % K, Arrhenius temperature [Pethybridge et al 2013]
 
-% % In case you want to use the complex temperature correction equation...
-% % Temperature correction - case 1
-% T_L  = 6 + T_K;       % K, Lower boundary of the thermal range
-% T_H  = 21 + T_K;      % K, Upper boundary of the thermal range
-% T_AL = 20000;         % K, Arrhenius temperature at the lower boundary
-% T_AH = 95000;         % K, Arrhenius temperature at the upper boundary
+% In case you want to use the complex temperature correction equation...
+% Temperature correction - case 1
+T_L  = 6 + T_K;       % K, Lower boundary of the thermal range
+T_H  = 21 + T_K;      % K, Upper boundary of the thermal range
+T_AL = 20000;         % K, Arrhenius temperature at the lower boundary
+T_AH = 95000;         % K, Arrhenius temperature at the upper boundary
 % 
 % % Temperature correction - case 2
 % T_L  = 6 + T_K;       % K, Lower boundary of the thermal range
@@ -61,12 +61,12 @@ V_b = (L_wb * del_M)^3; % cm^3, structural volume at birth (first feeding)
 V_p = (L_wp * del_M)^3; % cm^3, structural volume at puberty
 
 %% Create a directory to store the results
-subdir = 'C:/Users/jflores/Documents/JORGE/TESIS/TESIS_PHD/DEB/ichthyop_DEB/Engraulis_encrasicolus_param/DEBoutV1';
+subdir = 'C:/Users/jflores/Documents/JORGE/TESIS/TESIS_PHD/DEB/ichthyop_DEB/Engraulis_encrasicolus_param/DEBoutV1/';
 mkdir(subdir);
 
 %% INITIAL CONDITIONS FOR THE STATE VARIABLES = EGG STAGE
 E_0  = 1;                    % J, egg content
-V_0  = (0.0025 * del_M)^3; % cm, structural volume --> !! try different values
+V_0  = (0.0025 * del_M)^3;   % cm, structural volume --> !! try different values
 E_R0 = 0;                    % J, reproduction buffer
 
 %% NUMERICAL INTEGRATION - EULER METHOD
@@ -84,18 +84,18 @@ E_R(1) = E_R0;   % J,    Reproduction buffer   ------ I put an indice to try to 
 
 for i = 1:n_iter-1 
 
-%     %% Temperature correction
-%     % In case you want to use the complex temperature correction equation...
-%     s_A = exp(T_A/ T_ref - T_A ./ T(i));  % Arrhenius factor
-%     s_L_ratio = (1 + exp(T_AL/ T_ref - T_AL/ T_L)) ./ ...
-% 	           (1 + exp(T_AL ./ T(i)   - T_AL/ T_L));
-%     s_H_ratio = (1 + exp(T_AH/ T_H - T_AH/ T_ref)) ./ ...
-% 	           (1 + exp(T_AH/ T_H - T_AH ./ T(i)  ));
-%     c_T = s_A .* ((T(i) <= T_ref) .* s_L_ratio + (T(i) > T_ref) .* s_H_ratio); 
-
     %% Temperature correction
-    % In case you want to use the simple temperature correction equation...
-    c_T   = exp(T_A/ T_ref - T_A ./ T(i));  % simple Arrhenius correction factor
+    % In case you want to use the complex temperature correction equation...
+    s_A = exp(T_A/ T_ref - T_A ./ T(i));  % Arrhenius factor
+    s_L_ratio = (1 + exp(T_AL/ T_ref - T_AL/ T_L)) ./ ...
+	           (1 + exp(T_AL ./ T(i)   - T_AL/ T_L));
+    s_H_ratio = (1 + exp(T_AH/ T_H - T_AH/ T_ref)) ./ ...
+	           (1 + exp(T_AH/ T_H - T_AH ./ T(i)  ));
+    c_T = s_A .* ((T(i) <= T_ref) .* s_L_ratio + (T(i) > T_ref) .* s_H_ratio); 
+
+%     %% Temperature correction
+%     % In case you want to use the simple temperature correction equation...
+%     c_T   = exp(T_A/ T_ref - T_A ./ T(i));  % simple Arrhenius correction factor
 	
 	%% Correction of physiology parameters for temperature :
     p_AmT = c_T * p_Am;
@@ -103,7 +103,7 @@ for i = 1:n_iter-1
  
     %% Scaled functional response
 %     f = X(i) / (X(i) + K); % -, scaled functional response
-    f = 0.9999; % We assume food to satiation
+    f = 1; % We assume food to satiation
 
     %% Shape factor – std model
     del(i) = del_M;
