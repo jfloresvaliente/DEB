@@ -20,11 +20,11 @@ temp  = 10:30; % Test Temperature Range (ºC)
 
 %% INDIVIDUAL INITIAL CONDITIONS
 
-% talla   = 0.5; % Please provide the initial physical length (cm) of the individual.
-% reserve = 0.348822917; % Please provide the initial energy reserve (J) of the individual.
+talla   = 0.5; % Please provide the initial physical length (cm) of the individual.
+reserve = 0.348822917; % Please provide the initial energy reserve (J) of the individual.
 
-talla   = 3; % Please provide the initial physical length (cm) of the individual.
-reserve = 29.58281518; % Please provide the initial energy reserve (J) of the individual.
+% talla   = 3; % Please provide the initial physical length (cm) of the individual.
+% reserve = 29.58281518; % Please provide the initial energy reserve (J) of the individual.
 
 %% PARAMETER VALUES
 
@@ -45,9 +45,9 @@ T_H  = 24 + T_K;      % K, Upper boundary of the thermal range
 T_AL = 20000;         % K, Arrhenius temperature at the lower boundary
 T_AH = 570000;        % K, Arrhenius temperature at the upper boundary
 
-% if T_L > T_ref || T_H < T_ref
-%      fprintf('Warning from temp_corr: invalid parameter combination, T_L > T_ref and/or T_H < T_ref\n')
-% end
+if T_L > T_ref || T_H < T_ref
+     fprintf('Warning from temp_corr: invalid parameter combination, T_L > T_ref and/or T_H < T_ref\n')
+end
 
 p_Am    = 84.97;   % J.cm-2.d-1 , Surface-area-specific maximum assimilation rate. In DEBstd = kap_X * p_Xm = 230.75
 V_dot   = 0.04124; % (cm d-1); Energy conductance
@@ -90,6 +90,7 @@ acc    = zeros(n_iter,1);
 del    = zeros(n_iter,1);
 Lw     = zeros(n_iter,1);
 t_cor  = zeros(n_iter,1);
+starva = zeros(n_iter,1);
 
 t(1)   = t_0;    % d,    Time vector initialization 
 E(1)   = E_0;    % J,    Initial reserve
@@ -174,7 +175,7 @@ for j = 1:size(temp,2)
         if or( kap * p_C_flux < p_M_flux, ((1 - kap) * p_C_flux - p_J_flux <0))
 %             disp('starvation')
 %             return
-            E(i) = 0; % When the value of E = 0, I can identify starvation in the output.
+            starva(i) = 1;
         else		
             dE = p_A_flux - p_C_flux ; % J/d, 
             dV = ((kap * p_C_flux) - p_M_flux) / E_G;       % cm^3/d,
@@ -220,9 +221,9 @@ for j = 1:size(temp,2)
         
         end
 
-        out_mat = table(t,E,V,E_H,E_R,Lw,F,t_vec,f_vec,del,t_cor,...
+        out_mat = table(t,E,V,E_H,E_R,Lw,F,t_vec,f_vec,del,t_cor,starva,...
                         'VariableNames',...
-                        {'t','E','V','E_H','E_R','Lw','Fec','temp','f','delta','t_cor'});
+                        {'t','E','V','E_H','E_R','Lw','Fec','temp','f','delta','t_cor','starvation'});
         writetable(out_mat, strcat(subdir, '/DEB_out','T',num2str(temp(j)),'f','.txt'))
 
 end

@@ -23,19 +23,19 @@ f_res = 0.1 : 0.1 : 1; % Functional response to test
 T_ref = 16 + T_K;      % K, Reference temperature (not to be changed) [Pethybridge et al 2013]
 T_A   = 9800;          % K, Arrhenius temperature [Pethybridge et al 2013]
 
-% In case you want to use the complex temperature correction equation...
-% Temperature correction - case 1
-T_L  = 6 + T_K;       % K, Lower boundary of the thermal range
-T_H  = 21 + T_K;      % K, Upper boundary of the thermal range
-T_AL = 20000;         % K, Arrhenius temperature at the lower boundary
-T_AH = 95000;         % K, Arrhenius temperature at the upper boundary
+% % In case you want to use the complex temperature correction equation...
+% % Temperature correction - case 1
+% T_L  = 6 + T_K;       % K, Lower boundary of the thermal range
+% T_H  = 21 + T_K;      % K, Upper boundary of the thermal range
+% T_AL = 20000;         % K, Arrhenius temperature at the lower boundary
+% T_AH = 95000;         % K, Arrhenius temperature at the upper boundary
 % 
 % % Temperature correction - case 2
 % T_L  = 6 + T_K;       % K, Lower boundary of the thermal range
 % T_H  = 24 + T_K;      % K, Upper boundary of the thermal range
 % T_AL = 20000;         % K, Arrhenius temperature at the lower boundary
 % T_AH = 570000;        % K, Arrhenius temperature at the upper boundary
-
+% 
 % if T_L > T_ref || T_H < T_ref
 %      fprintf('Warning from temp_corr: invalid parameter combination, T_L > T_ref and/or T_H < T_ref\n')
 % end
@@ -44,7 +44,6 @@ kap_X = 0.71;         % -, digestion efficiency of food to reserve [Pethybridge 
 p_Xm  = 325;          % J.cm-2.d-1 , Surface-area-specific maximum ingestion rate [Pethybridge et al 2013] Cambia con el tipo de alimento
 p_Am  = kap_X * p_Xm; % 325 * 0.71 = 230.75 ;J.cm-2.d-1 , Surface-area-specific maximum assimilation rate [Pethybridge et al 2013]
 E_m   = 2700;         % J.cm^(-3), maximum reserve density [Pethybridge et al 2013]
-% v     = p_Am / E_m;   % 230.75/2700=0.0855; cm/d' , energy conductance --modif-- [Pethybridge et al 2013]
 E_G   = 4000;         % J/cm^3, spec cost for structure [Pethybridge et al 2013] lo que hay que pagar para generar 1 cm3 de estructura
 p_M   = 48;           % J/d.cm^3' , vol-spec somatic maintenance rate [Pethybridge et al 2013]
 kap   = 0.7;          % - , allocation fraction to soma [Pethybridge et al 2013] Para mantenimiento y crecimiento
@@ -91,18 +90,18 @@ for j = 1:size(temp,2)
         
         for i = 1:n_iter-1
 
-    %% Temperature correction
-    % In case you want to use the complex temperature correction equation...
-    s_A = exp(T_A/ T_ref - T_A ./ T(i));  % Arrhenius factor
-    s_L_ratio = (1 + exp(T_AL/ T_ref - T_AL/ T_L)) ./ ...
-	           (1 + exp(T_AL ./ T(i)   - T_AL/ T_L));
-    s_H_ratio = (1 + exp(T_AH/ T_H - T_AH/ T_ref)) ./ ...
-	           (1 + exp(T_AH/ T_H - T_AH ./ T(i)  ));
-    c_T = s_A .* ((T(i) <= T_ref) .* s_L_ratio + (T(i) > T_ref) .* s_H_ratio); 
+%     %% Temperature correction
+%     % In case you want to use the complex temperature correction equation...
+%     s_A = exp(T_A/ T_ref - T_A / T(i));  % Arrhenius factor
+%     s_L_ratio = (1 + exp(T_AL/ T_ref - T_AL/ T_L)) / ...
+% 	           (1 + exp(T_AL / T(i)   - T_AL/ T_L));
+%     s_H_ratio = (1 + exp(T_AH/ T_H - T_AH/ T_ref)) / ...
+% 	           (1 + exp(T_AH/ T_H - T_AH / T(i)  ));
+%     c_T = s_A * ((T(i) <= T_ref) * s_L_ratio + (T(i) > T_ref) * s_H_ratio); 
 
-% 		%% Temperature correction
-% 		% In case you want to use the simple temperature correction equation...
-%         c_T   = exp(T_A/ T_ref - T_A ./ T(i));  % simple Arrhenius correction factor
+		%% Temperature correction
+		% In case you want to use the simple temperature correction equation...
+        c_T   = exp(T_A/ T_ref - T_A / T(i));  % simple Arrhenius correction factor
 		
 		%% Correction of physiology parameters for temperature :
         p_AmT = c_T * p_Am;

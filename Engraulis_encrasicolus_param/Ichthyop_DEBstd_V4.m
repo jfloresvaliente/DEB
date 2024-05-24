@@ -20,11 +20,11 @@ temp  = 10:30; % Test Temperature Range (ºC)
 
 %% INDIVIDUAL INITIAL CONDITIONS
 
-% talla   = 0.5; % Please provide the initial physical length (cm) of the individual.
-% reserve = 1.273398104; % Please provide the initial energy reserve (J) of the individual.
+talla   = 0.5; % Please provide the initial physical length (cm) of the individual.
+reserve = 1.273398104; % Please provide the initial energy reserve (J) of the individual.
 
-talla   = 3; % Please provide the initial physical length (cm) of the individual.
-reserve = 267.4234087; % Please provide the initial energy reserve (J) of the individual.
+% talla   = 3; % Please provide the initial physical length (cm) of the individual.
+% reserve = 267.4234087; % Please provide the initial energy reserve (J) of the individual.
 
 %% PARAMETER VALUES
 
@@ -86,6 +86,7 @@ F      = zeros(n_iter,1);
 del    = zeros(n_iter,1);
 Lw     = zeros(n_iter,1);
 t_cor  = zeros(n_iter,1);
+starva = zeros(n_iter,1);
 
 t(1)   = t_0;    % d,    Time vector initialization 
 E(1)   = E_0;    % J,    Initial reserve
@@ -139,9 +140,8 @@ for j = 1:size(temp,2)
         if or( (p_G_flux < 0), ((1 - kap) * p_C_flux - p_J_flux <0))
 %             disp('starvation')
 %             return
-            E(i) = 0; % When the value of E = 0, I can identify starvation in the output.
+            starva(i) = 1;
         else
-		
             dE = p_A_flux - p_C_flux ; % J/d, 
             dV = p_G_flux / E_G;       % cm^3/d,
 			
@@ -183,8 +183,8 @@ for j = 1:size(temp,2)
         
         end
 		
-        out_mat = table(t,E,V,E_R,Lw,F,t_vec,f_vec,del,t_cor,...
+        out_mat = table(t,E,V,E_R,Lw,F,t_vec,f_vec,del,t_cor,starva,...
                         'VariableNames',...
-                        {'t','E','V','E_R','Lw','Fec','temp','f','delta','t_cor'});
+                        {'t','E','V','E_R','Lw','Fec','temp','f','delta','t_cor','starvation'});
         writetable(out_mat, strcat(subdir, '/DEB_out','T',num2str(temp(j)),'f','.txt'))
 end
