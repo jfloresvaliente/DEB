@@ -3,7 +3,7 @@
 % Numerical integration : Euler
 % Author                : Laure Pecquerie
 % Modified              : J. Flores
-% 2024/03/17
+% 2024/05/28
 
 %% INITIALIZATION - TIME STEP, SIMULATION DURATION, VECTOR LENGTH
 dt     = 0.0833;                        % d, time step of the model = 2h ==> dt = 2/24h
@@ -21,7 +21,7 @@ T = repmat(20 + T_K, n_iter,1); % K, Temperature
 
 % Primary parameters
 T_ref = 20 + T_K;      % K, Reference temperature (not to be changed) [Pethybridge et al 2013]
-T_A   = 10000;         % K, Arrhenius temperature [Pethybridge et al 2013]
+T_A   = 8000;         % K, Arrhenius temperature [Pethybridge et al 2013]
 
 % % In case you want to use the complex temperature correction equation...
 % % Temperature correction - case 1
@@ -40,21 +40,22 @@ T_A   = 10000;         % K, Arrhenius temperature [Pethybridge et al 2013]
 %      fprintf('Warning from temp_corr: invalid parameter combination, T_L > T_ref and/or T_H < T_ref\n')
 % end
 
-p_Am    = 84.97;   % J.cm-2.d-1 , Surface-area-specific maximum assimilation rate. In DEBstd = kap_X * p_Xm = 230.75
-V_dot   = 0.04124; % (cm d-1); Energy conductance
-E_G     = 5283;    % J/cm^3, spec cost for structure [Pethybridge et al 2013] lo que hay que pagar para generar 1 cm3 de estructura
-p_M     = 80.71;   % J/d.cm^3' , vol-spec somatic maintenance rate [Pethybridge et al 2013]
-kap     = 0.5512;  % - , allocation fraction to soma [Pethybridge et al 2013] Para mantenimiento y crecimiento
+p_Am    = 95.0973; % J.cm-2.d-1 , Surface-area-specific maximum assimilation rate. In DEBstd = kap_X * p_Xm = 230.75
+V_dot   = 0.03394; % (cm d-1); Energy conductance
+E_G     = 5200;    % J/cm^3, spec cost for structure [Pethybridge et al 2013] lo que hay que pagar para generar 1 cm3 de estructura
+p_M     = 93.55;   % J/d.cm^3' , vol-spec somatic maintenance rate [Pethybridge et al 2013]
+kap     = 0.5587;  % - , allocation fraction to soma [Pethybridge et al 2013] Para mantenimiento y crecimiento
 kap_R   = 0.95;    % - , reproduction efficiency [Pethybridge et al 2013]
-L_b     = 0.0445;  % cm; Volumetric length at birth
-L_j     = 0.2612;  % cm, Volumetric length at metamorphosis
-E_Hb    = 0.3350;  % J, Maturity threshold at birth % ouverture de la bouche % A 18.5 ºC, hatch = 5d
-% E_Hb    = 0.3889;  % J, Maturity threshold at birth % ouverture de la bouche
-E_Hj    = 83.22;   % J, Maturity threshold at metamorphosis
-E_Hp    = 42160;   % J, Maturity threshold at puberty
+L_b     = 0.0427;  % cm; Volumetric length at birth
+L_j     = 0.2321;  % cm, Volumetric length at metamorphosis
+E_Hb    = 0.3294;  % J, Maturity threshold at birth % ouverture de la bouche % A 18.5 ºC, hatch = 5d
+E_Hj    = 56.07;   % J, Maturity threshold at metamorphosis
+E_Hp    = 34000;   % J, Maturity threshold at puberty
 k_J     = 0.002;   % d-1, Maturity maintenance rate coefficient
-del_M1  = 0.08095; % -, shape coefficient for standard length of larvae
-del_M2  = 0.1889;  % -, shape coefficient for standard length
+
+%% Auxiliary parameters
+del_M1  = 0.07875; % -, shape coefficient for standard length of larvae
+del_M2  = 0.1905;  % -, shape coefficient for standard length
 
 % % For a dynamic shape factor (Jusup et al 2011)
 % E_Hy    = E_Hp;    % J, Maturity at the end of the early juvenile stage
@@ -94,7 +95,7 @@ for i = 1:n_iter-1
 %     s_L_ratio = (1 + exp(T_AL/ T_ref - T_AL/ T_L)) ./ ...
 % 	           (1 + exp(T_AL ./ T(i)   - T_AL/ T_L));
 %     s_H_ratio = (1 + exp(T_AH/ T_H - T_AH/ T_ref)) ./ ...
-% 	           (1 + exp(T_AH/ T_H - T_AH ./ T(i)  ));
+% 	           (1 + exp(T_AH/ T_H - T_AH / T(i)));
 %     c_T = s_A .* ((T(i) <= T_ref) .* s_L_ratio + (T(i) > T_ref) .* s_H_ratio); 
 
     %% Temperature correction
@@ -109,8 +110,10 @@ for i = 1:n_iter-1
 
     %% Scaled functional response
 %     f = X(i) / (X(i) + K); % -, scaled functional response
-    f = 0.9999; % We assume food to satiation
+%     f = 1; % We assume food to satiation
    
+
+        
     %% Metabolic acceleration – abj model
     if E_H(i) < E_Hb
         s_M = 1;
@@ -120,14 +123,23 @@ for i = 1:n_iter-1
     	s_M = L_j / L_b;
     end
 
-    %% Shape factor – abj model
-    if E_H(i) < E_Hb
-       del_M = del_M1; % shape coefficient for standard length of larvae
-    elseif (E_Hb <= E_H(i) && E_H(i) < E_Hj)
-       del_M = del_M1; % shape coefficient for standard length of larvae
-    else
-       del_M = del_M2; % shape coefficient for standard length
-    end
+%     %% Shape factor – abj model
+%     if E_H(i) < E_Hb
+%        del_M = del_M1; % shape coefficient for standard length of larvae
+%     elseif (E_Hb <= E_H(i) && E_H(i) < E_Hj)
+%        del_M = del_M1; % shape coefficient for standard length of larvae
+%     else
+%        del_M = del_M2; % shape coefficient for standard length
+%     end
+
+        %% Shape factor – abj model (Pecquerie 2024)
+        if E_H(i) < E_Hb
+            del_M = del_M1; % shape coefficient for standard length of larvae
+        elseif (E_Hb <= E_H(i) && E_H(i) < E_Hj)
+            del_M = (del_M1 * (E_Hj - E_H(i)) + del_M2 * (E_H(i) - E_Hb)) / (E_Hj - E_Hb); % shape coefficient for standard length of larvae
+        else
+            del_M = del_M2; % shape coefficient for standard length
+        end
 
 %     %% Shape factor – abj model (Jusup et al 2011)
 %     if E_H(i) < E_Hb
@@ -137,24 +149,31 @@ for i = 1:n_iter-1
 %     else
 %        del_M = del_M2; % shape coefficient for standard length
 %     end
-
+    
 	acc(i) = s_M;
     del(i) = del_M;
+    
+    %% Scaled functional response
+    if V(i) < (3 * del_M)^3;
+          f = 1;
+    else
+          f = 0;
+    end
 
 	% Only two parameters are accelerated by s_M: p_Am and V_dot
-	p_AmT  = s_M * p_AmT;
-    V_dotT = s_M * V_dotT;
-	
-	%% Fluxes , j/d
-    if E_H(i) < E_Hb
-        p_A_flux = 0;
-    else
-        p_A_flux = f * p_AmT * V(i).^(2/3); % J/d assimilation rate 
-    end
-    
-    p_M_flux = p_MT * V(i); % J/d , Volume-related somatic maintenance
-	p_C_flux = (E(i) / V(i)) * (E_G * V_dotT * V(i)^(2/3) + p_M_flux) ./ (kap * E(i) ./ V(i) + E_G); % Energy for utilisation
-    p_J_flux = k_JT * E_H(i)  ; % J/d, Maturity maintenance !!
+		p_AmT  = s_M * p_AmT;
+		V_dotT = s_M * V_dotT;
+		
+        %% Fluxes , j/d
+        if E_H < E_Hb
+            p_A_flux = 0;
+        else
+            p_A_flux = f * p_AmT * V(i).^(2/3); % J/d assimilation rate 
+        end
+
+        p_M_flux = p_MT * V(i); % J/d , Volume-related somatic maintenance
+		p_C_flux = (E(i) / V(i)) * (E_G * V_dotT * V(i)^(2/3) + p_M_flux) ./ (kap * E(i) ./ V(i) + E_G); % Energy for utilisation
+		p_J_flux = k_JT * E_H(i)  ; % J/d, Maturity maintenance !!
 
     if or( kap * p_C_flux < p_M_flux, ((1 - kap) * p_C_flux - p_J_flux <0))
         fprintf('starvation = %d\n', t(i))
@@ -203,93 +222,91 @@ out_mat = table(t,E,V,E_H,E_R,F,T-T_K,acc,del,...
                         {'t','E','V','E_H','E_R','Fec','temp','acc','delta'});
 writetable(out_mat, strcat(subdir, 'DEB_out.txt'))
 
-%% Physical length
-Lw = (V.^(1/3))./del; % cm, Physical length
-
-%% Wet weight
-d_V  = 0.23;   % g/cm^3, specific density of structure (dry weight)
-mu_V = 500000; % J/mol, specific chemical potential of structure
-mu_E = 550000; % J/mol, specific chemical potential of reserve
-w_V  = 23.9;   % g/mol, molecular weight of structure
-w_E  = 23.9;   % g/mol, molecular weight of reserve
-c_w  = 0.756;  % (c_w * W_w = total water weight)
-
-W_V        = d_V.*V;
-W_E        = (w_E/mu_E).*E;
-W_ER       = (w_E/mu_E).*E_R;
-Dry_weight = [W_V W_E W_ER];        % g, Dry weight
-Wet_weight = Dry_weight./(1 - c_w); % g, Wet weight
-
-Ww = sum(Wet_weight,2);
+% %% Physical length
+% Lw = (V.^(1/3))./del; % cm, Physical length
 % 
-% %% PLOTS
+% %% Wet weight
+% d_V  = 0.23;   % g/cm^3, specific density of structure (dry weight)
+% mu_V = 500000; % J/mol, specific chemical potential of structure
+% mu_E = 550000; % J/mol, specific chemical potential of reserve
+% w_V  = 23.9;   % g/mol, molecular weight of structure
+% w_E  = 23.9;   % g/mol, molecular weight of reserve
+% c_w  = 0.756;  % (c_w * W_w = total water weight)
 % 
-% % % State variables plots
-% % 
-% % figure(1)
-% % subplot(221)
-% % plot(t,E) % time in days VS Energy available into reserve in J 
-% % xlabel('time (d)', 'Fontsize', 15)
-% % ylabel('Reserve E (J)', 'Fontsize', 15)  
-% % 
-% % subplot (222)
-% % plot(t,V) % time in days VS Volume of the structure in cm^3
-% % xlabel('time (d)', 'Fontsize', 15)
-% % ylabel('Structure V (cm^3)', 'Fontsize', 15)  
-% % 
-% % subplot (223)
-% % plot(t,E_R) % time in days VS Energy invested to reproduction in J/d
-% % xlabel('time (d)', 'Fontsize', 15)
-% % ylabel('E_R (J)', 'Fontsize', 15)  
-% % 
-% % subplot (224)
-% % plot(t,E_H) % time in days VS Maturity level J/d
-% % xlabel('time (d)', 'Fontsize', 15)
-% % ylabel('E_H (J)', 'Fontsize', 15)  
+% W_V        = d_V.*V;
+% W_E        = (w_E/mu_E).*E;
+% W_ER       = (w_E/mu_E).*E_R;
+% Dry_weight = [W_V W_E W_ER];        % g, Dry weight
+% Wet_weight = Dry_weight./(1 - c_w); % g, Wet weight
 % 
-% % % Observable variables plots
+% Ww = sum(Wet_weight,2);
+% 
+%% PLOTS
+% 
+%% State variables plots
+% 
+% figure(1)
+% subplot(221)
+% plot(t,E) % time in days VS Energy available into reserve in J 
+% xlabel('time (d)', 'Fontsize', 15)
+% ylabel('Reserve E (J)', 'Fontsize', 15)  
+% 
+% subplot (222)
+% plot(t,V) % time in days VS Volume of the structure in cm^3
+% xlabel('time (d)', 'Fontsize', 15)
+% ylabel('Structure V (cm^3)', 'Fontsize', 15)  
+% 
+% subplot (223)
+% plot(t,E_R) % time in days VS Energy invested to reproduction in J/d
+% xlabel('time (d)', 'Fontsize', 15)
+% ylabel('E_R (J)', 'Fontsize', 15)  
+% 
+% subplot (224)
+% plot(t,E_H) % time in days VS Maturity level J/d
+% xlabel('time (d)', 'Fontsize', 15)
+% ylabel('E_H (J)', 'Fontsize', 15)  
+% 
+%% Observable variables plots
 % 
 % figure(2)
 % subplot(221)
-% plot(t,Lw) % time in days VS Length in cm
+% plot(t(1:700),Lw(1:700)) % time in days VS Length in cm
 % xlabel('time (d)', 'Fontsize', 15)
 % ylabel('Length (cm)', 'Fontsize', 15)
-% % 
-% % subplot(222)
-% % area(t,Wet_weight)
-% % legend('DEB Structure', 'DEB Reserve', 'DEB Reproduction')
-% % xlabel('time (d)', 'Fontsize', 15)
-% % ylabel('Wet Weight (g)', 'Fontsize', 15)
-% % 
-% % subplot(223)
-% % plot(Lw,Ww)
-% % xlabel('Length (cm)', 'Fontsize', 15)
-% % ylabel('Wet Weight (g)', 'Fontsize', 15)
-% % 
-% % subplot (224)
-% % plot(t, F) % time in days VS fecundity 
-% % xlabel('time (d)', 'Fontsize', 15)
-% % ylabel('Number of oocytes (#)', 'Fontsize', 15)
-% % 
-% % % Plot Fecundidad
-% % 
-% % figure(3)
-% % subplot(131)
-% % plot(t, F./7.5) % Por qué dividio por 7.5
-% % xlabel('time (d)', 'Fontsize', 15)
-% % ylabel('Relative Fecundidad (#eggs/batch)', 'Fontsize', 15)
-% % 
-% % subplot(132)
-% % plot(t,Ww)
-% % xlabel('time (d)', 'Fontsize', 15)
-% % ylabel('Wet Weight (g)', 'Fontsize', 15)
-% % 
-% % index = find(F > 0);
-% % subplot(133)
-% % plot(Ww(index),F(index))
-% % xlabel('Wet Weight (g)', 'Fontsize', 15)
-% % ylabel('Relative Fecundidad (#eggs/batch)', 'Fontsize', 15)
-% % 
+% 
+% subplot(222)
+% area(t,Wet_weight)
+% legend('DEB Structure', 'DEB Reserve', 'DEB Reproduction')
+% xlabel('time (d)', 'Fontsize', 15)
+% ylabel('Wet Weight (g)', 'Fontsize', 15)
+% 
+% subplot(223)
+% plot(Lw,Ww)
+% xlabel('Length (cm)', 'Fontsize', 15)
+% ylabel('Wet Weight (g)', 'Fontsize', 15)
+% 
+% subplot (224)
+% plot(t, F) % time in days VS fecundity 
+% xlabel('time (d)', 'Fontsize', 15)
+% ylabel('Number of oocytes (#)', 'Fontsize', 15)
+% 
+% figure(3)
+% subplot(131)
+% plot(t, F./7.5) % Por qué dividio por 7.5
+% xlabel('time (d)', 'Fontsize', 15)
+% ylabel('Relative Fecundidad (#eggs/batch)', 'Fontsize', 15)
+% 
+% subplot(132)
+% plot(t,Ww)
+% xlabel('time (d)', 'Fontsize', 15)
+% ylabel('Wet Weight (g)', 'Fontsize', 15)
+% 
+% index = find(F > 0);
+% subplot(133)
+% plot(Ww(index),F(index))
+% xlabel('Wet Weight (g)', 'Fontsize', 15)
+% ylabel('Relative Fecundidad (#eggs/batch)', 'Fontsize', 15)
+% 
 %% Length at transitions 
 i_b = find(E_H >= E_Hb,1); 
 fprintf('age at birth = %d\n', t(i_b) - t(1)) % d, age at birth
@@ -306,9 +323,7 @@ fprintf('length at metamorphosis = %d\n',Lw(i_j))    %cm, length at puberty
 i_p = find(E_H >= E_Hp,1); 
 fprintf('age at puberty = %d\n', t(i_p) - t(1)) % d, age at puberty 
 fprintf('length at puberty = %d\n',Lw(i_p))    %cm, length at puberty
-% 
-% 
-% 
+
 % i_2cm = find(Lw >= 2,1);
 % fprintf('age at 2 cm = %d\n', t(i_2cm) - t(1)) % d, age at puberty 
 % 
