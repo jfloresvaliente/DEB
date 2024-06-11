@@ -15,7 +15,6 @@ T_K    = 273.15;                        % Kelvin degrees
 %% FORCING VARIABLES
 temp  = 10:30;          % Temperaturas en Cº para testear
 f_res = 0.1 : 0.1 : 1;  % Functional response to test
-% We assume abundant food / ad libitum for now
 
 %% PARAMETER VALUES
 
@@ -24,17 +23,17 @@ T_ref = 20 + T_K;      % K, Reference temperature (not to be changed) [Pethybrid
 T_A   = 8000;         % K, Arrhenius temperature [Pethybridge et al 2013]
 
 % In case you want to use the complex temperature correction equation...
-% % Temperature correction - case 1
-% T_L  = 6 + T_K;       % K, Lower boundary of the thermal range
-% T_H  = 21 + T_K;      % K, Upper boundary of the thermal range
-% T_AL = 20000;         % K, Arrhenius temperature at the lower boundary
-% T_AH = 95000;         % K, Arrhenius temperature at the upper boundary
-
-% Temperature correction - case 2
+% Temperature correction - case 1
 T_L  = 6 + T_K;       % K, Lower boundary of the thermal range
-T_H  = 24 + T_K;      % K, Upper boundary of the thermal range
+T_H  = 21 + T_K;      % K, Upper boundary of the thermal range
 T_AL = 20000;         % K, Arrhenius temperature at the lower boundary
-T_AH = 570000;        % K, Arrhenius temperature at the upper boundary
+T_AH = 95000;         % K, Arrhenius temperature at the upper boundary
+
+% % Temperature correction - case 2
+% T_L  = 6 + T_K;       % K, Lower boundary of the thermal range
+% T_H  = 24 + T_K;      % K, Upper boundary of the thermal range
+% T_AL = 20000;         % K, Arrhenius temperature at the lower boundary
+% T_AH = 570000;        % K, Arrhenius temperature at the upper boundary
 
 % if T_L > T_ref || T_H < T_ref
 %      fprintf('Warning from temp_corr: invalid parameter combination, T_L > T_ref and/or T_H < T_ref\n')
@@ -55,9 +54,9 @@ k_J     = 0.002;   % d-1, Maturity maintenance rate coefficient
 del_M1  = 0.07875; % -, shape coefficient for standard length of larvae
 del_M2  = 0.1905;  % -, shape coefficient for standard length
 
-% % For a dynamic shape factor (Jusup et al 2011)
-% E_Hy    = E_Hp;    % J, Maturity at the end of the early juvenile stage
-% E_H2    = (E_Hb + E_Hj)/2; % Half-saturation maturity, i.e. the level of maturity at which the shape factor is an arithmetic mean of del_M1 and del_M2 
+% For a dynamic shape factor (Jusup et al 2011)
+E_Hy    = E_Hj;    % J, Maturity at the end of the early juvenile stage ('metamorphosis')
+E_H2    = (E_Hb + E_Hj)/2; % Half-saturation maturity, i.e. the level of maturity at which the shape factor is an arithmetic mean of del_M1 and del_M2 
 
 %% Create a directory to store the results
 subdir = 'C:/Users/jflores/Documents/JORGE/TESIS/TESIS_PHD/DEB/ichthyop_DEB/Engraulis_ringens_param/DEBoutV2';
@@ -77,7 +76,9 @@ E_H    = zeros(n_iter,1);
 E_R    = zeros(n_iter,1);
 F      = zeros(n_iter,1);
 acc    = zeros(n_iter,1);
-del    = zeros(n_iter,1);
+del1    = zeros(n_iter,1);
+del2   = zeros(n_iter,1);
+del3   = zeros(n_iter,1);
 
 t(1)   = t_0;    % d,    Time vector initialization 
 E(1)   = E_0;    % J,    Initial reserve
@@ -86,22 +87,21 @@ E_R(1) = E_R0;   % J,    Reproduction buffer   ------ I put an indice to try to 
 E_H(1) = E_H0;	 % J, Maturity
 
 for j = 1:size(temp,2)
-    
-    for k = 1:size(f_res,2)
-        
-        T = repmat(temp(j) + T_K, n_iter,1); % K, Temperature
-        f = f_res(k);
-        
-        for i = 1:n_iter-1
 
-    %% Temperature correction
-    % In case you want to use the complex temperature correction equation...
-    s_A = exp(T_A/ T_ref - T_A / T(i));  % Arrhenius factor
-    s_L_ratio = (1 + exp(T_AL/ T_ref - T_AL/ T_L)) / ...
-	           (1 + exp(T_AL / T(i)   - T_AL/ T_L));
-    s_H_ratio = (1 + exp(T_AH/ T_H - T_AH/ T_ref)) / ...
-	           (1 + exp(T_AH/ T_H - T_AH / T(i)));
-    c_T = s_A * ((T(i) <= T_ref) * s_L_ratio + (T(i) > T_ref) * s_H_ratio); 
+    for k = 1:size(f_res,2)
+
+        T = repmat(temp(j) + T_K, n_iter,1); % K, Temperature
+        f = f_res(k); % Scaled functional response
+
+        for i = 1:n_iter-1
+        %% Temperature correction
+        % In case you want to use the complex temperature correction equation...
+        s_A = exp(T_A/ T_ref - T_A / T(i));  % Arrhenius factor
+        s_L_ratio = (1 + exp(T_AL/ T_ref - T_AL/ T_L)) / ...
+                   (1 + exp(T_AL / T(i)   - T_AL/ T_L));
+        s_H_ratio = (1 + exp(T_AH/ T_H - T_AH/ T_ref)) / ...
+                   (1 + exp(T_AH/ T_H - T_AH / T(i)));
+        c_T = s_A * ((T(i) <= T_ref) * s_L_ratio + (T(i) > T_ref) * s_H_ratio); 
 
 % 		%% Temperature correction
 % 		% In case you want to use the simple temperature correction equation...
@@ -113,10 +113,6 @@ for j = 1:size(temp,2)
 		p_MT   = c_T * p_M;
 		k_JT   = c_T * k_J;
  
-        %% Scaled functional response
-        % f = X(i) / (X(i) + K); % -, scaled functional response
-        % f = 0.9999; % We assume food to satiation
-
         %% Metabolic acceleration – abj model
         if E_H(i) < E_Hb
             s_M = 1;
@@ -126,15 +122,6 @@ for j = 1:size(temp,2)
             s_M = L_j / L_b;
         end
 
-%         %% Shape factor – abj model
-%         if E_H(i) < E_Hb
-%             del_M = del_M1; % shape coefficient for standard length of larvae
-%         elseif (E_Hb <= E_H(i) && E_H(i) < E_Hj)
-%             del_M = del_M1; % shape coefficient for standard length of larvae
-%         else
-%             del_M = del_M2; % shape coefficient for standard length
-%         end
-
         %% Shape factor – abj model (Pecquerie 2024)
         if E_H(i) < E_Hb
             del_M = del_M1; % shape coefficient for standard length of larvae
@@ -143,18 +130,29 @@ for j = 1:size(temp,2)
         else
             del_M = del_M2; % shape coefficient for standard length
         end
-
-%     %% Shape factor – abj model (Jusup et al 2011)
-%     if E_H(i) < E_Hb
-%        del_M = del_M1; % shape coefficient for standard length of larvae
-%     elseif (E_Hb <= E_H(i) && E_H(i) < E_Hy)
-%        del_M = ( del_M1*(E_H2 - E_Hb) + del_M2*(E_H(i)- E_Hb) ) / (E_H(i) + E_H2 - 2*E_Hb);
-%     else
-%        del_M = del_M2; % shape coefficient for standard length
-%     end
-		
-        acc(i) = s_M;
-        del(i) = del_M;
+        
+        %% Shape factor – abj model (Jusup et al 2011)
+        if E_H(i) < E_Hb
+           del_M_jusup = del_M1; % shape coefficient for standard length of larvae
+        elseif (E_Hb <= E_H(i) && E_H(i) < E_Hy)
+           del_M_jusup = ( del_M1*(E_H2 - E_Hb) + del_M2*(E_H(i)- E_Hb) ) / (E_H(i) + E_H2 - 2*E_Hb);
+        else
+           del_M_jusup = del_M2; % shape coefficient for standard length
+        end
+    
+            %% Shape factor – abj model
+        if E_H(i) < E_Hb
+            del_M_continuo = del_M1; % shape coefficient for standard length of larvae
+        elseif (E_Hb <= E_H(i) && E_H(i) < E_Hj)
+            del_M_continuo = del_M1; % shape coefficient for standard length of larvae
+        else
+            del_M_continuo = del_M2; % shape coefficient for standard length
+        end
+    
+        del1(i) = del_M;
+        del2(i) = del_M_jusup;
+        del3(i) = del_M_continuo;
+        acc(i)  = s_M;
         
 		% Only two parameters are accelerated by s_M: p_Am and V_dot
 		p_AmT  = s_M * p_AmT;
@@ -217,9 +215,9 @@ for j = 1:size(temp,2)
         
         end
         
-        out_mat = table(t,E,V,E_H,E_R,F,acc,del,t_vec,f_vec,...
+        out_mat = table(t,E,V,E_H,E_R,F,acc,del1,del2,del3,t_vec,f_vec,...
                         'VariableNames',...
-                        {'t','E','V','E_H','E_R','Fec','acc','delta','temp','f'});
+                        {'t','E','V','E_H','E_R','Fec','acc','deltaPecq','deltaJusup','delta','temp','f'});
         writetable(out_mat, strcat(subdir, '/DEB_out','T',num2str(temp(j)),'f',num2str(f_res(k)),'.txt'))
     end
 end
