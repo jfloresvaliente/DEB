@@ -22,19 +22,19 @@ f_res = 0.1 : 0.1 : 1;  % Functional response to test
 T_ref = 20 + T_K;      % K, Reference temperature (not to be changed) [Pethybridge et al 2013]
 T_A   = 8000;         % K, Arrhenius temperature [Pethybridge et al 2013]
 
-% In case you want to use the complex temperature correction equation...
-% Temperature correction - case 1
-T_L  = 6 + T_K;       % K, Lower boundary of the thermal range
-T_H  = 21 + T_K;      % K, Upper boundary of the thermal range
-T_AL = 20000;         % K, Arrhenius temperature at the lower boundary
-T_AH = 95000;         % K, Arrhenius temperature at the upper boundary
-
+% % In case you want to use the complex temperature correction equation...
+% % Temperature correction - case 1
+% T_L  = 6 + T_K;       % K, Lower boundary of the thermal range
+% T_H  = 21 + T_K;      % K, Upper boundary of the thermal range
+% T_AL = 20000;         % K, Arrhenius temperature at the lower boundary
+% T_AH = 95000;         % K, Arrhenius temperature at the upper boundary
+% 
 % % Temperature correction - case 2
 % T_L  = 6 + T_K;       % K, Lower boundary of the thermal range
 % T_H  = 24 + T_K;      % K, Upper boundary of the thermal range
 % T_AL = 20000;         % K, Arrhenius temperature at the lower boundary
 % T_AH = 570000;        % K, Arrhenius temperature at the upper boundary
-
+% 
 % if T_L > T_ref || T_H < T_ref
 %      fprintf('Warning from temp_corr: invalid parameter combination, T_L > T_ref and/or T_H < T_ref\n')
 % end
@@ -76,9 +76,7 @@ E_H    = zeros(n_iter,1);
 E_R    = zeros(n_iter,1);
 F      = zeros(n_iter,1);
 acc    = zeros(n_iter,1);
-del1    = zeros(n_iter,1);
-del2   = zeros(n_iter,1);
-del3   = zeros(n_iter,1);
+del    = zeros(n_iter,1);
 
 t(1)   = t_0;    % d,    Time vector initialization 
 E(1)   = E_0;    % J,    Initial reserve
@@ -94,18 +92,18 @@ for j = 1:size(temp,2)
         f = f_res(k); % Scaled functional response
 
         for i = 1:n_iter-1
-        %% Temperature correction
-        % In case you want to use the complex temperature correction equation...
-        s_A = exp(T_A/ T_ref - T_A / T(i));  % Arrhenius factor
-        s_L_ratio = (1 + exp(T_AL/ T_ref - T_AL/ T_L)) / ...
-                   (1 + exp(T_AL / T(i)   - T_AL/ T_L));
-        s_H_ratio = (1 + exp(T_AH/ T_H - T_AH/ T_ref)) / ...
-                   (1 + exp(T_AH/ T_H - T_AH / T(i)));
-        c_T = s_A * ((T(i) <= T_ref) * s_L_ratio + (T(i) > T_ref) * s_H_ratio); 
+%         %% Temperature correction
+%         % In case you want to use the complex temperature correction equation...
+%         s_A = exp(T_A/ T_ref - T_A / T(i));  % Arrhenius factor
+%         s_L_ratio = (1 + exp(T_AL/ T_ref - T_AL/ T_L)) / ...
+%                    (1 + exp(T_AL / T(i)   - T_AL/ T_L));
+%         s_H_ratio = (1 + exp(T_AH/ T_H - T_AH/ T_ref)) / ...
+%                    (1 + exp(T_AH/ T_H - T_AH / T(i)));
+%         c_T = s_A * ((T(i) <= T_ref) * s_L_ratio + (T(i) > T_ref) * s_H_ratio); 
 
-% 		%% Temperature correction
-% 		% In case you want to use the simple temperature correction equation...
-%         c_T   = exp(T_A/ T_ref - T_A / T(i));  % simple Arrhenius correction factor
+		%% Temperature correction
+		% In case you want to use the simple temperature correction equation...
+        c_T   = exp(T_A/ T_ref - T_A / T(i));  % simple Arrhenius correction factor
         
 		%% Correction of physiology parameters for temperature :
 		p_AmT  = c_T * p_Am;
@@ -121,37 +119,37 @@ for j = 1:size(temp,2)
         else
             s_M = L_j / L_b;
         end
-
+        
+%         %% Shape factor – abj model
+%         if E_H(i) < E_Hb
+%             del_M_conti = del_M1; % shape coefficient for standard length of larvae
+%         elseif (E_Hb <= E_H(i) && E_H(i) < E_Hj)
+%             del_M_conti = del_M1; % shape coefficient for standard length of larvae
+%         else
+%             del_M_conti = del_M2; % shape coefficient for standard length
+%         end
+        
         %% Shape factor – abj model (Pecquerie 2024)
         if E_H(i) < E_Hb
-            del_M = del_M1; % shape coefficient for standard length of larvae
+            del_M_pecqu = del_M1; % shape coefficient for standard length of larvae
         elseif (E_Hb <= E_H(i) && E_H(i) < E_Hj)
-            del_M = (del_M1 * (E_Hj - E_H(i)) + del_M2 * (E_H(i) - E_Hb)) / (E_Hj - E_Hb); % shape coefficient for standard length of larvae
+            del_M_pecqu = (del_M1 * (E_Hj - E_H(i)) + del_M2 * (E_H(i) - E_Hb)) / (E_Hj - E_Hb); % shape coefficient for standard length of larvae
         else
-            del_M = del_M2; % shape coefficient for standard length
+            del_M_pecqu = del_M2; % shape coefficient for standard length
         end
         
-        %% Shape factor – abj model (Jusup et al 2011)
-        if E_H(i) < E_Hb
-           del_M_jusup = del_M1; % shape coefficient for standard length of larvae
-        elseif (E_Hb <= E_H(i) && E_H(i) < E_Hy)
-           del_M_jusup = ( del_M1*(E_H2 - E_Hb) + del_M2*(E_H(i)- E_Hb) ) / (E_H(i) + E_H2 - 2*E_Hb);
-        else
-           del_M_jusup = del_M2; % shape coefficient for standard length
-        end
+%         %% Shape factor – abj model (Jusup et al 2011)
+%         if E_H(i) < E_Hb
+%            del_M_jusup = del_M1; % shape coefficient for standard length of larvae
+%         elseif (E_Hb <= E_H(i) && E_H(i) < E_Hy)
+%            del_M_jusup = ( del_M1*(E_H2 - E_Hb) + del_M2*(E_H(i)- E_Hb) ) / (E_H(i) + E_H2 - 2*E_Hb);
+%         else
+%            del_M_jusup = del_M2; % shape coefficient for standard length
+%         end
     
-            %% Shape factor – abj model
-        if E_H(i) < E_Hb
-            del_M_continuo = del_M1; % shape coefficient for standard length of larvae
-        elseif (E_Hb <= E_H(i) && E_H(i) < E_Hj)
-            del_M_continuo = del_M1; % shape coefficient for standard length of larvae
-        else
-            del_M_continuo = del_M2; % shape coefficient for standard length
-        end
-    
-        del1(i) = del_M;
-        del2(i) = del_M_jusup;
-        del3(i) = del_M_continuo;
+%         del(i) = del_M_conti;
+        del(i) = del_M_pecqu;
+%         del(i) = del_M_jusup;
         acc(i)  = s_M;
         
 		% Only two parameters are accelerated by s_M: p_Am and V_dot
@@ -215,9 +213,10 @@ for j = 1:size(temp,2)
         
         end
         
-        out_mat = table(t,E,V,E_H,E_R,F,acc,del1,del2,del3,t_vec,f_vec,...
+        % del1 = continuo; % del2 = pecquerie; % del3 = jusup
+        out_mat = table(t,E,V,E_H,E_R,F,acc,del,t_vec,f_vec,...
                         'VariableNames',...
-                        {'t','E','V','E_H','E_R','Fec','acc','deltaPecq','deltaJusup','delta','temp','f'});
+                        {'t','E','V','E_H','E_R','Fec','acc','delta','temp','f'});
         writetable(out_mat, strcat(subdir, '/DEB_out','T',num2str(temp(j)),'f',num2str(f_res(k)),'.txt'))
     end
 end
