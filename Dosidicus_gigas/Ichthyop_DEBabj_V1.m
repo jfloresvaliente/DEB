@@ -21,7 +21,7 @@ T = repmat(20 + T_K, n_iter,1); % K, Temperature
 
 % Primary parameters
 T_ref = 20 + T_K;      % K, Reference temperature (not to be changed) [Pethybridge et al 2013]
-T_A   = 9000;         % K, Arrhenius temperature [Pethybridge et al 2013]
+T_A   = 9576;         % K, Arrhenius temperature [Pethybridge et al 2013]
 
 % In case you want to use the complex temperature correction equation...
 % Temperature correction - case 1
