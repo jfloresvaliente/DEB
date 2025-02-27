@@ -1,14 +1,14 @@
 %--------------------------------------------------------------------------
 % DEBabj model implemented in Ichthyop
 % Numerical integration : Euler
-% Author                : Laure Pecquerie
+% Author                : J. Flores
 % Modified              : J. Flores
 % 2024/05/28
 
 %% INITIALIZATION - TIME STEP, SIMULATION DURATION, VECTOR LENGTH
 dt     = 0.0833;                        % d, time step of the model = 2h ==> dt = 2/24h
 t_0    = 0;                             % d, January 1st
-t_end  = 4*365 + t_0 - 1;               % d, last day of the simulation
+t_end  = 2*365 + t_0 - 1;               % d, last day of the simulation
 n_iter = ceil((t_end - t_0 + 1) / dt);  % number of integration loop iterations
 T_K    = 273.15;                        % Kelvin degrees
 
@@ -21,7 +21,7 @@ T = repmat(20 + T_K, n_iter,1); % K, Temperature
 
 % Primary parameters
 T_ref = 20 + T_K;      % K, Reference temperature (not to be changed) [Pethybridge et al 2013]
-T_A   = 9576;         % K, Arrhenius temperature [Pethybridge et al 2013]
+T_A   = 9000;         % K, Arrhenius temperature [Pethybridge et al 2013]
 
 % In case you want to use the complex temperature correction equation...
 % Temperature correction - case 1
@@ -40,29 +40,29 @@ if T_L > T_ref || T_H < T_ref
      fprintf('Warning from temp_corr: invalid parameter combination, T_L > T_ref and/or T_H < T_ref\n')
 end
 
-p_Am    = 94.82;   % J.cm-2.d-1 , Surface-area-specific maximum assimilation rate. In DEBstd = kap_X * p_Xm = 230.75
-V_dot   = 0.03415; % (cm d-1); Energy conductance
-E_G     = 5214;    % J/cm^3, spec cost for structure [Pethybridge et al 2013] lo que hay que pagar para generar 1 cm3 de estructura
-p_M     = 91.62;   % J/d.cm^3' , vol-spec somatic maintenance rate [Pethybridge et al 2013]
-kap     = 0.5398;  % - , allocation fraction to soma [Pethybridge et al 2013] Para mantenimiento y crecimiento
+p_Am    = 1950.6;  % J.cm-2.d-1 , Surface-area-specific maximum assimilation rate. Male = 1839.5
+V_dot   = 0.02134; % (cm d-1); Energy conductance
+E_G     = 5500;    % J/cm^3, spec cost for structure [Pethybridge et al 2013] lo que hay que pagar para generar 1 cm3 de estructura
+p_M     = 345.04;  % J/d.cm^3' , vol-spec somatic maintenance rate [Pethybridge et al 2013]
+kap     = 0.7354;  % - , allocation fraction to soma [Pethybridge et al 2013] Para mantenimiento y crecimiento
 kap_R   = 0.95;    % - , reproduction efficiency [Pethybridge et al 2013]
-L_b     = 0.0418;  % cm; Volumetric length at birth
-L_j     = 0.2309;  % cm, Volumetric length at metamorphosis
-E_Hb    = 0.3339;  % J, Maturity threshold at birth % ouverture de la bouche % A 18.5 ºC, hatch = 5d
-E_Hj    = 59.66;   % J, Maturity threshold at metamorphosis
-E_Hp    = 33490;   % J, Maturity threshold at puberty
+L_b     = 0.0299;  % cm; Volumetric length at birth
+L_j     = 0.2234;  % cm, Volumetric length at metamorphosis
+E_Hb    = 0.0566;  % J, Maturity threshold at birth % ouverture de la bouche % A 18.5 ºC, hatch = 5d
+E_Hj    = 24.09;   % J, Maturity threshold at metamorphosis
+E_Hp    = 232700;  % J, Maturity threshold at puberty
 k_J     = 0.002;   % d-1, Maturity maintenance rate coefficient
 
 %% Auxiliary parameters
-del_M1  = 0.0791; % -, shape coefficient for standard length of larvae
-del_M2  = 0.1879; % -, shape coefficient for standard length
+del_M1  = 0.1254; % -, shape coefficient for standard length of larvae
+% del_M2  = 0.1879; % -, shape coefficient for standard length
 
 % For a dynamic shape factor (Jusup et al 2011)
 E_Hy    = E_Hp;    % J, Maturity at the end of the early juvenile stage
 E_H2    = (E_Hb + E_Hj)/2; % Half-saturation maturity, i.e. the level of maturity at which the shape factor is an arithmetic mean of del_M1 and del_M2
 
 %% Create a directory to store the results
-subdir = 'C:/Users/jflores/Documents/JORGE/TESIS/TESIS_PHD/DEB/ichthyop_DEB/Engraulis_ringens_param/DEBoutV1/';
+subdir = 'C:/Users/jflores/Documents/JORGE/AFIIMM/models/Dosidicus_gigas/DEBoutV1/';
 mkdir(subdir);
 
 %% INITIAL CONDITIONS FOR THE STATE VARIABLES = EGG STAGE
@@ -90,17 +90,17 @@ E_H(1) = E_H0;	 % J, Maturity
 for i = 1:n_iter-1 
 
     %% Temperature correction
-    % In case you want to use the complex temperature correction equation...
-    s_A = exp(T_A/ T_ref - T_A ./ T(i));  % Arrhenius factor
-    s_L_ratio = (1 + exp(T_AL/ T_ref - T_AL/ T_L)) ./ ...
-	           (1 + exp(T_AL ./ T(i)   - T_AL/ T_L));
-    s_H_ratio = (1 + exp(T_AH/ T_H - T_AH/ T_ref)) ./ ...
-	           (1 + exp(T_AH/ T_H - T_AH / T(i)));
-    c_T = s_A .* ((T(i) <= T_ref) .* s_L_ratio + (T(i) > T_ref) .* s_H_ratio); 
+%     % In case you want to use the complex temperature correction equation...
+%     s_A = exp(T_A/ T_ref - T_A ./ T(i));  % Arrhenius factor
+%     s_L_ratio = (1 + exp(T_AL/ T_ref - T_AL/ T_L)) ./ ...
+% 	           (1 + exp(T_AL ./ T(i)   - T_AL/ T_L));
+%     s_H_ratio = (1 + exp(T_AH/ T_H - T_AH/ T_ref)) ./ ...
+% 	           (1 + exp(T_AH/ T_H - T_AH / T(i)));
+%     c_T = s_A .* ((T(i) <= T_ref) .* s_L_ratio + (T(i) > T_ref) .* s_H_ratio); 
 
-%     %% Temperature correction
-%     % In case you want to use the simple temperature correction equation...
-%     c_T    = exp(T_A/ T_ref - T_A ./ T(i));  % simple Arrhenius correction factor
+    %% Temperature correction
+    % In case you want to use the simple temperature correction equation...
+    c_T    = exp(T_A/ T_ref - T_A ./ T(i));  % simple Arrhenius correction factor
 	
 	%% Correction of physiology parameters for temperature :
     p_AmT  = c_T * p_Am;
@@ -121,14 +121,14 @@ for i = 1:n_iter-1
     	s_M = L_j / L_b;
     end
 
-%     %% Shape factor – abj model
-%     if E_H(i) < E_Hb
-%        del_M = del_M1; % shape coefficient for standard length of larvae
-%     elseif (E_Hb <= E_H(i) && E_H(i) < E_Hj)
-%        del_M = del_M1; % shape coefficient for standard length of larvae
-%     else
+    %% Shape factor – abj model
+    if E_H(i) < E_Hb
+       del_M = del_M1; % shape coefficient for standard length of larvae
+    elseif (E_Hb <= E_H(i) && E_H(i) < E_Hj)
+       del_M = del_M1; % shape coefficient for standard length of larvae
+    else
 %        del_M = del_M2; % shape coefficient for standard length
-%     end
+    end
 
 %         %% Shape factor – abj model (Pecquerie 2024)
 %         if E_H(i) < E_Hb
@@ -139,14 +139,14 @@ for i = 1:n_iter-1
 %             del_M = del_M2; % shape coefficient for standard length
 %         end
 
-    %% Shape factor – abj model (Jusup et al 2011)
-    if E_H(i) < E_Hb
-       del_M = del_M1; % shape coefficient for standard length of larvae
-    elseif (E_Hb <= E_H(i) && E_H(i) < E_Hy)
-       del_M = ( del_M1*(E_H2 - E_Hb) + del_M2*(E_H(i)- E_Hb) ) / (E_H(i) + E_H2 - 2*E_Hb);
-    else
-       del_M = del_M2; % shape coefficient for standard length
-    end
+%     %% Shape factor – abj model (Jusup et al 2011)
+%     if E_H(i) < E_Hb
+%        del_M = del_M1; % shape coefficient for standard length of larvae
+%     elseif (E_Hb <= E_H(i) && E_H(i) < E_Hy)
+%        del_M = ( del_M1*(E_H2 - E_Hb) + del_M2*(E_H(i)- E_Hb) ) / (E_H(i) + E_H2 - 2*E_Hb);
+%     else
+%        del_M = del_M2; % shape coefficient for standard length
+%     end
     
 	acc(i) = s_M;
     del(i) = del_M;
@@ -195,22 +195,10 @@ for i = 1:n_iter-1
 	E_H(i+1) = E_H(i) + dE_H * dt; % j/d, Energy invested to development
     E_R(i+1) = E_R(i) + dE_R * dt; % J/d, Energy invested to reproduction
 
-%     %% Spawning rule 1: Every 30 days
+%     %% Spawning rule 1
 %     if (i/360 - round(i/360) == 0)
 %         E_R(i+1) = 0; % E_R resets to zero
 %     end
-               
-%     %% Spawning rule 2: One spawning peak in September
-%     if (i == 3240 || i == 7560 || i == 11880 || i == 16200) % Indices for September months' iterators (the spawning is done between i and i+1)
-%         E_R(i+1) = E_R(i) * 0.10; % E_R is 10 percent of the previous amount.
-%     end
-
-    %% Spawning rule 3: Two spawning peaks in September & March
-    if (i+1 == 3240 || i+1 == 7560 || i+1 == 11880 || i+1 == 16200 || ... % Indices for September months' iterators (the spawning is done between i and i+1)
-        i+1 == 1080 || i+1 == 5400 || i+1 == 9720  || i+1 == 14040)       % Indices for March months' iterators (the spawning is done between i and i+1)
-        F(i+1)   = E_R(i+1) * kap_R / E_0;
-        E_R(i+1) = 0; % E_R resets to zero
-    end
 
     t(i+1) = t(i) + dt;
 end
@@ -241,7 +229,7 @@ Ww = sum(Wet_weight,2);
 
 %% PLOTS
 
-%% State variables plots
+% State variables plots
 
 figure(1)
 subplot(221)
@@ -268,9 +256,9 @@ ylabel('E_H (J)', 'Fontsize', 15)
 
 figure(2)
 subplot(221)
-plot(t(1:700),Lw(1:700)) % time in days VS Length in cm
+plot(t,Lw) % time in days VS Length in cm
 xlabel('time (d)', 'Fontsize', 15)
-ylabel('Length (cm)', 'Fontsize', 15)
+ylabel('Matle length (cm)', 'Fontsize', 15)
 
 subplot(222)
 area(t,Wet_weight)
@@ -280,7 +268,7 @@ ylabel('Wet Weight (g)', 'Fontsize', 15)
 
 subplot(223)
 plot(Lw,Ww)
-xlabel('Length (cm)', 'Fontsize', 15)
+xlabel('Mantle length (cm)', 'Fontsize', 15)
 ylabel('Wet Weight (g)', 'Fontsize', 15)
 
 subplot (224)
@@ -308,11 +296,21 @@ ylabel('Number of oocytes (#)', 'Fontsize', 15)
 %% Length at transitions 
 i_b = find(E_H >= E_Hb,1); 
 fprintf('age at birth = %d\n', t(i_b) - t(1)) % d, age at birth
-fprintf('length at birth = %d\n',Lw(i_b))    %cm, length at birth
+fprintf('Mantle length at birth = %d\n',Lw(i_b))    %cm, length at birth
+
+figure(3)
+plot(t(1:i_b),Lw(1:i_b)) % time in days VS Length in cm
+xlabel('time (d)', 'Fontsize', 15)
+ylabel('Mantle length (cm)', 'Fontsize', 15)
 
 i_j = find(E_H >= E_Hj,1); 
 fprintf('age at metamorphosis = %d\n', t(i_j) - t(1)) % d, age at puberty 
-fprintf('length at metamorphosis = %d\n',Lw(i_j))    %cm, length at puberty
+fprintf('Mantle length at metamorphosis = %d\n',Lw(i_j))    %cm, length at puberty
+
+figure(4)
+plot(t(1:i_j),Lw(1:i_j)) % time in days VS Length in cm
+xlabel('time (d)', 'Fontsize', 15)
+ylabel('Mantle Length (cm)', 'Fontsize', 15)
 
 % i_y = find(E_H >= E_Hy, 1);
 % fprintf('age at early juvenile stage = %d\n', t(i_y) - t(1)) % d, age at maturity at the end of the early juvenile stage
