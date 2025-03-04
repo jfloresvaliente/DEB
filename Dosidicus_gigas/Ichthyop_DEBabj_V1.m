@@ -3,7 +3,7 @@
 % Numerical integration : Euler
 % Author                : J. Flores
 % Modified              : J. Flores
-% 2024/05/28
+% 2025/03/03
 
 %% INITIALIZATION - TIME STEP, SIMULATION DURATION, VECTOR LENGTH
 dt     = 0.0833;                        % d, time step of the model = 2h ==> dt = 2/24h
@@ -13,15 +13,15 @@ n_iter = ceil((t_end - t_0 + 1) / dt);  % number of integration loop iterations
 T_K    = 273.15;                        % Kelvin degrees
 
 %% FORCING VARIABLES
-T = repmat(20 + T_K, n_iter,1); % K, Temperature
+T = repmat(26 + T_K, n_iter,1); % K, Temperature
 % X = repmat(20000, n_iter, 1);   % J/l, Food density (here in Joules per liter of water but can be different depending on the study)
 % We assume abundant food / ad libitum for now
 
 %% PARAMETER VALUES
 
 % Primary parameters
-T_ref = 20 + T_K;      % K, Reference temperature (not to be changed) [Pethybridge et al 2013]
-T_A   = 9000;         % K, Arrhenius temperature [Pethybridge et al 2013]
+T_ref = 20 + T_K;      % K, Reference temperature
+T_A   = 9000;         % K, Arrhenius temperature
 
 % In case you want to use the complex temperature correction equation...
 % Temperature correction - case 1
@@ -48,7 +48,7 @@ kap     = 0.7354;  % - , allocation fraction to soma [Pethybridge et al 2013] Pa
 kap_R   = 0.95;    % - , reproduction efficiency [Pethybridge et al 2013]
 L_b     = 0.0299;  % cm; Volumetric length at birth
 L_j     = 0.2234;  % cm, Volumetric length at metamorphosis
-E_Hb    = 0.0566;  % J, Maturity threshold at birth % ouverture de la bouche % A 18.5 ºC, hatch = 5d
+E_Hb    = 0.0566;  % J, Maturity threshold at birth % ouverture de la bouche
 E_Hj    = 24.09;   % J, Maturity threshold at metamorphosis
 E_Hp    = 232700;  % J, Maturity threshold at puberty
 k_J     = 0.002;   % d-1, Maturity maintenance rate coefficient
@@ -90,17 +90,17 @@ E_H(1) = E_H0;	 % J, Maturity
 for i = 1:n_iter-1 
 
     %% Temperature correction
-%     % In case you want to use the complex temperature correction equation...
-%     s_A = exp(T_A/ T_ref - T_A ./ T(i));  % Arrhenius factor
-%     s_L_ratio = (1 + exp(T_AL/ T_ref - T_AL/ T_L)) ./ ...
-% 	           (1 + exp(T_AL ./ T(i)   - T_AL/ T_L));
-%     s_H_ratio = (1 + exp(T_AH/ T_H - T_AH/ T_ref)) ./ ...
-% 	           (1 + exp(T_AH/ T_H - T_AH / T(i)));
-%     c_T = s_A .* ((T(i) <= T_ref) .* s_L_ratio + (T(i) > T_ref) .* s_H_ratio); 
+    % In case you want to use the complex temperature correction equation...
+    s_A = exp(T_A/ T_ref - T_A ./ T(i));  % Arrhenius factor
+    s_L_ratio = (1 + exp(T_AL/ T_ref - T_AL/ T_L)) ./ ...
+	           (1 + exp(T_AL ./ T(i)   - T_AL/ T_L));
+    s_H_ratio = (1 + exp(T_AH/ T_H - T_AH/ T_ref)) ./ ...
+	           (1 + exp(T_AH/ T_H - T_AH / T(i)));
+    c_T = s_A .* ((T(i) <= T_ref) .* s_L_ratio + (T(i) > T_ref) .* s_H_ratio);
 
-    %% Temperature correction
-    % In case you want to use the simple temperature correction equation...
-    c_T    = exp(T_A/ T_ref - T_A ./ T(i));  % simple Arrhenius correction factor
+%     %% Temperature correction
+%     % In case you want to use the simple temperature correction equation...
+%     c_T    = exp(T_A/ T_ref - T_A ./ T(i));  % simple Arrhenius correction factor
 	
 	%% Correction of physiology parameters for temperature :
     p_AmT  = c_T * p_Am;
@@ -127,7 +127,7 @@ for i = 1:n_iter-1
     elseif (E_Hb <= E_H(i) && E_H(i) < E_Hj)
        del_M = del_M1; % shape coefficient for standard length of larvae
     else
-%        del_M = del_M2; % shape coefficient for standard length
+       del_M = del_M1; % shape coefficient for standard length
     end
 
 %         %% Shape factor – abj model (Pecquerie 2024)
@@ -194,10 +194,11 @@ for i = 1:n_iter-1
     V(i+1)   = V(i) + dV * dt;     % cm^3, Volume of the structure
 	E_H(i+1) = E_H(i) + dE_H * dt; % j/d, Energy invested to development
     E_R(i+1) = E_R(i) + dE_R * dt; % J/d, Energy invested to reproduction
+    F(i+1)   = E_R(i+1) * kap_R / E_0;
 
-%     %% Spawning rule 1
-%     if (i/360 - round(i/360) == 0)
-%         E_R(i+1) = 0; % E_R resets to zero
+%     %% Spawning rule
+%     if (IGS > 20)
+%         fprintf('Spawns and dies = %d\n', t(i))
 %     end
 
     t(i+1) = t(i) + dt;
@@ -235,7 +236,7 @@ figure(1)
 subplot(221)
 plot(t,E) % time in days VS Energy available into reserve in J 
 xlabel('time (d)', 'Fontsize', 15)
-ylabel('Reserve E (J)', 'Fontsize', 15)  
+ylabel('Reserve E (J)', 'Fontsize', 15)
 
 subplot (222)
 plot(t,V) % time in days VS Volume of the structure in cm^3
